@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Snaplate">
+    <meta name="apple-mobile-web-app-title" content="SnapCal">
     <meta name="theme-color" content="#121212">
-    <title>Snaplate - Yapay Zeka Diyet Asistanı</title>
+    <title>SnapCal - Yapay Zeka Diyet Asistanı</title>
     
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
@@ -74,7 +74,7 @@
 
         /* Başlıklar ve Metinler */
         h1 { font-size: 28px; font-weight: 800; margin-bottom: 20px; color: var(--primary-color); }
-        h2 { font-size: 22px; font-weight: 600; margin-bottom: 15px; }
+        h2 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
         p { font-size: 14px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
 
         /* Form Elemanları */
@@ -112,6 +112,19 @@
         }
         .btn:active { background-color: var(--primary-dark); transform: scale(0.98); }
         .btn-outline { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+
+        /* Hedef Rozeti (Ana Ekran) */
+        .target-badge {
+            background-color: rgba(0, 230, 118, 0.1);
+            color: var(--primary-color);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
 
         /* Dev Kamera Butonu */
         .scan-container {
@@ -269,8 +282,8 @@
 
     <!-- 1. ONBOARDING (İlk Giriş) EKRANI -->
     <div id="onboarding-screen" class="screen">
-        <h1>Snaplate'a Hoş Geldin</h1>
-        <p>Sana özel kalori hedefini belirlemek için bilgilerini gir.</p>
+        <h1>SnapCal'a Hoş Geldin</h1>
+        <p>Sana özel günlük kalori limitini belirlemek için bilgilerini gir.</p>
         
         <div class="form-group">
             <label>Cinsiyet</label>
@@ -295,17 +308,22 @@
             <label>Hedef Kilo (kg)</label>
             <input type="number" id="target-weight" placeholder="Örn: 70">
         </div>
-        <div class="form-group">
-            <label>Hedefe Ulaşma Süresi (Gün)</label>
-            <input type="number" id="target-days" placeholder="Örn: 60">
-        </div>
         
-        <button class="btn" onclick="calculateAndSaveProfile()">Hedefimi Hesapla</button>
+        <button class="btn" onclick="calculateAndSaveProfile()">Hedefimi Hesapla & Başla</button>
     </div>
 
     <!-- 2. ANA EKRAN (Dashboard & Kamera) -->
     <div id="home-screen" class="screen">
-        <h2>Bugün Durumun</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Bugün Durumun</h2>
+        </div>
+        
+        <!-- YENİ: Günlük Hedef Rozeti -->
+        <div class="target-badge">
+            <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: text-bottom;">target</span>
+            Günlük Hedef: <span id="ui-daily-target">0</span> kcal
+        </div>
+
         <div class="api-warning" id="api-warning">Lütfen ayarlardan Gemini API Anahtarınızı girin.</div>
         
         <div class="progress-card">
@@ -315,7 +333,7 @@
                     <span id="calories-total">/ 2000 kcal</span>
                 </div>
             </div>
-            <p id="calorie-message">Bugünlük harika gidiyorsun!</p>
+            <p id="calorie-message">Güne başlamak için bir öğün tara!</p>
         </div>
 
         <div class="scan-container">
@@ -392,7 +410,7 @@
         <div class="modal-content">
             <div class="loader"></div>
             <h2>Yapay Zeka Analiz Ediyor...</h2>
-            <p>Snaplate yemeğinizi inceliyor, lütfen bekleyin.</p>
+            <p>SnapCal yemeğinizi inceliyor, lütfen bekleyin.</p>
         </div>
     </div>
 
@@ -413,9 +431,9 @@
 
 <script>
     // --- STATE YÖNETİMİ ---
-    let userProfile = JSON.parse(localStorage.getItem('snaplate_profile')) || null;
-    let apiKey = localStorage.getItem('snaplate_apikey') || '';
-    let mealHistory = JSON.parse(localStorage.getItem('snaplate_history')) || [];
+    let userProfile = JSON.parse(localStorage.getItem('snapcal_profile')) || null;
+    let apiKey = localStorage.getItem('snapcal_apikey') || '';
+    let mealHistory = JSON.parse(localStorage.getItem('snapcal_history')) || [];
     let currentScannedMeal = null; // Geçici olarak taranan yemeği tutar
 
     // --- BAŞLATMA ---
@@ -449,9 +467,8 @@
         const height = parseInt(document.getElementById('height').value);
         const weight = parseInt(document.getElementById('weight').value);
         const targetWeight = parseInt(document.getElementById('target-weight').value);
-        const targetDays = parseInt(document.getElementById('target-days').value);
 
-        if(!age || !height || !weight || !targetWeight || !targetDays) {
+        if(!age || !height || !weight || !targetWeight) {
             alert('Lütfen tüm alanları doldurun!');
             return;
         }
@@ -464,21 +481,27 @@
         // TDEE (Sedanter / Hareketsiz varsayılan: x 1.2)
         let tdee = bmr * 1.2;
 
-        // Hedef Kalori Farkı (1 kg = 7700 kcal)
-        let weightDiff = weight - targetWeight; // Pozitifse kilo verme, negatifse alma
-        let totalCalDiff = weightDiff * 7700;
-        let dailyCalDiff = totalCalDiff / targetDays;
+        // Standart Güvenli Kalori Açığı/Fazlası (Haftada ortalama 0.5kg için günlük 500 kcal)
+        let weightDiff = weight - targetWeight; 
+        let dailyCalDiff = 0;
+        
+        if (weightDiff > 0) {
+            // Kilo verme durumu
+            dailyCalDiff = 500; 
+        } else if (weightDiff < 0) {
+            // Kilo alma durumu
+            dailyCalDiff = -500;
+        }
 
         let dailyTarget = Math.round(tdee - dailyCalDiff);
 
         // Sağlık sınırı (1200 altı tehlikeli)
         if (dailyTarget < 1200 && weightDiff > 0) dailyTarget = 1200;
 
-        userProfile = { gender, age, height, weight, targetWeight, targetDays, dailyTarget };
-        localStorage.setItem('snaplate_profile', JSON.stringify(userProfile));
+        userProfile = { gender, age, height, weight, targetWeight, dailyTarget };
+        localStorage.setItem('snapcal_profile', JSON.stringify(userProfile));
 
-        alert(`Hesaplandı! Günlük alman gereken kalori: ${dailyTarget} kcal`);
-        
+        // Alert kaldırıldı, doğrudan ana sayfaya geçiş yapılıyor.
         document.getElementById('onboarding-screen').classList.remove('active');
         document.getElementById('bottom-nav').style.display = 'flex';
         updateDashboard();
@@ -492,7 +515,7 @@
     function saveApiKey() {
         const key = document.getElementById('api-key').value.trim();
         if (key) {
-            localStorage.setItem('snaplate_apikey', key);
+            localStorage.setItem('snapcal_apikey', key);
             apiKey = key;
             alert('API Anahtarı başarıyla kaydedildi!');
             updateDashboard();
@@ -516,12 +539,15 @@
 
         if(!userProfile) return;
 
+        const target = userProfile.dailyTarget;
+        
+        // Eklenen Rozetteki hedefi güncelle
+        document.getElementById('ui-daily-target').innerText = target;
+
         const today = new Date().toLocaleDateString('tr-TR');
         let todayEaten = mealHistory
             .filter(meal => meal.date === today)
             .reduce((sum, meal) => sum + meal.calories, 0);
-
-        const target = userProfile.dailyTarget;
         
         document.getElementById('calories-eaten').innerText = todayEaten;
         document.getElementById('calories-total').innerText = `/ ${target} kcal`;
@@ -550,7 +576,7 @@
             return;
         }
         
-        const hideWarning = localStorage.getItem('snaplate_hide_warning');
+        const hideWarning = localStorage.getItem('snapcal_hide_warning');
         if (hideWarning === 'true') {
             document.getElementById('camera-input').click();
         } else {
@@ -561,7 +587,7 @@
     function acceptWarningAndOpenCamera() {
         const dontShow = document.getElementById('dont-show-again').checked;
         if (dontShow) {
-            localStorage.setItem('snaplate_hide_warning', 'true');
+            localStorage.setItem('snapcal_hide_warning', 'true');
         }
         closeModal('warning-modal');
         document.getElementById('camera-input').click();
@@ -577,14 +603,12 @@
         if (file) {
             const reader = new FileReader();
             reader.onloadend = function() {
-                // Base64 stringini al (data:image/jpeg;base64, kısmını at)
                 const base64Data = reader.result.split(',')[1];
                 const mimeType = file.type;
                 analyzeFoodWithAI(base64Data, mimeType);
             }
             reader.readAsDataURL(file);
         }
-        // Input'u sıfırla ki aynı fotoğrafı tekrar çekebilsin
         event.target.value = '';
     });
 
@@ -637,7 +661,6 @@ Yağ: [Sayı]g
     }
 
     function processAIResult(text) {
-        // AI'ın döndürdüğü metni parse et
         const isNotFood = text.toLowerCase().includes('lütfen bir yemek fotoğrafı çekin');
         
         const resultDiv = document.getElementById('ai-result-text');
@@ -647,18 +670,15 @@ Yağ: [Sayı]g
             resultDiv.innerHTML = `<p style="color:var(--danger)">Bu bir yemek fotoğrafı gibi görünmüyor. Lütfen tekrar deneyin.</p>`;
             saveBtn.style.display = 'none';
         } else {
-            // Regex ile değerleri çıkar
             const foodMatch = text.match(/Yemek:\s*(.+)/i);
             const calMatch = text.match(/Kalori:\s*(\d+)/i);
             
             const foodName = foodMatch ? foodMatch[1].trim() : 'Bilinmeyen Yemek';
             const calories = calMatch ? parseInt(calMatch[1]) : 0;
 
-            // Metni HTML olarak formatla göster (satır atlamalarını <br> yap)
             resultDiv.innerHTML = text.replace(/\n/g, '<br>');
             saveBtn.style.display = 'flex';
 
-            // Geçici state'e kaydet
             currentScannedMeal = {
                 id: Date.now(),
                 date: new Date().toLocaleDateString('tr-TR'),
@@ -675,12 +695,12 @@ Yağ: [Sayı]g
     // --- GEÇMİŞ VE VERİ KAYDI ---
     function saveMealToHistory() {
         if(currentScannedMeal && currentScannedMeal.calories > 0) {
-            mealHistory.unshift(currentScannedMeal); // Başa ekle
-            localStorage.setItem('snaplate_history', JSON.stringify(mealHistory));
+            mealHistory.unshift(currentScannedMeal); 
+            localStorage.setItem('snapcal_history', JSON.stringify(mealHistory));
             
             closeModal('result-modal');
             updateDashboard();
-            currentScannedMeal = null; // Sıfırla
+            currentScannedMeal = null; 
             alert('Öğün geçmişe eklendi!');
         } else {
             alert('Kalori bilgisi bulunamadığı için kaydedilemedi.');
