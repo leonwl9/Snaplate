@@ -109,6 +109,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            text-decoration: none; /* Link olarak kullanıldığında altı çizilmesin */
         }
         .btn:active { background-color: var(--primary-dark); transform: scale(0.98); }
         .btn-outline { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
@@ -318,7 +319,6 @@
             <h2>Bugün Durumun</h2>
         </div>
         
-        <!-- YENİ: Günlük Hedef Rozeti -->
         <div class="target-badge">
             <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: text-bottom;">target</span>
             Günlük Hedef: <span id="ui-daily-target">0</span> kcal
@@ -337,7 +337,6 @@
         </div>
 
         <div class="scan-container">
-            <!-- Gerçek dosya girdisi gizli, butona tıklayınca tetiklenecek -->
             <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
             <button class="scan-btn" onclick="handleScanClick()">
                 <span class="material-symbols-outlined">photo_camera</span>
@@ -363,7 +362,8 @@
             <label>Gemini API Key</label>
             <input type="text" id="api-key" placeholder="AIzaSy...">
         </div>
-        <button class="btn" onclick="saveApiKey()">Anahtarı Kaydet</button>
+        <button class="btn" onclick="saveApiKey()" style="margin-bottom: 10px;">Anahtarı Kaydet</button>
+        <button class="btn btn-outline" onclick="openModal('api-help-modal')">API Anahtarı Nasıl Alınır?</button>
         
         <hr style="border-color: #333; margin: 30px 0;">
         
@@ -390,6 +390,23 @@
 
     <!-- MODALLAR -->
     
+    <!-- API Yardım Modalı -->
+    <div class="modal-overlay" id="api-help-modal">
+        <div class="modal-content">
+            <span class="material-symbols-outlined" style="font-size: 48px; color: var(--primary-color); margin-bottom: 10px;">vpn_key</span>
+            <h2>API Anahtarı Alma Rehberi</h2>
+            <ol style="text-align: left; font-size: 13px; margin: 15px 0; padding-left: 20px; line-height: 1.6; color: var(--text-muted);">
+                <li>Aşağıdaki butona tıklayarak <b>Google AI Studio</b> sayfasına gidin.</li>
+                <li>Google (Gmail) hesabınızla giriş yapın.</li>
+                <li>Üst kısımdaki <b>"Get API Key"</b> veya sol menüdeki <b>"Create API Key"</b> butonuna tıklayın.</li>
+                <li>Oluşturulan uzun şifreyi kopyalayıp uygulamadaki kutucuğa yapıştırın.</li>
+            </ol>
+            <p style="font-size: 12px; color: var(--primary-color); margin-bottom: 15px;">* Gemini API kullanımı standart kullanıcılar için tamamen ücretsizdir.</p>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn" style="margin-bottom: 10px;">Google AI Studio'ya Git</a>
+            <button class="btn btn-outline" onclick="closeModal('api-help-modal')">Kapat</button>
+        </div>
+    </div>
+
     <!-- Kamera Uyarı Modalı -->
     <div class="modal-overlay" id="warning-modal">
         <div class="modal-content">
@@ -410,7 +427,7 @@
         <div class="modal-content">
             <div class="loader"></div>
             <h2>Yapay Zeka Analiz Ediyor...</h2>
-            <p>SnapCal yemeğinizi inceliyor, lütfen bekleyin.</p>
+            <p>SnapCal yemeğinizi inceliyor, bu birkaç saniye sürebilir.</p>
         </div>
     </div>
 
@@ -434,7 +451,7 @@
     let userProfile = JSON.parse(localStorage.getItem('snapcal_profile')) || null;
     let apiKey = localStorage.getItem('snapcal_apikey') || '';
     let mealHistory = JSON.parse(localStorage.getItem('snapcal_history')) || [];
-    let currentScannedMeal = null; // Geçici olarak taranan yemeği tutar
+    let currentScannedMeal = null;
 
     // --- BAŞLATMA ---
     window.onload = () => {
@@ -448,7 +465,7 @@
         }
     };
 
-    // --- NAVİGASYON ---
+    // --- NAVİGASYON VE MODALLAR ---
     function navigate(tab) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(`${tab}-screen`).classList.add('active');
@@ -460,7 +477,15 @@
         if (tab === 'history') renderHistory();
     }
 
-    // --- PROFİL VE HESAPLAMA (Harris-Benedict) ---
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // --- PROFİL VE HESAPLAMA ---
     function calculateAndSaveProfile() {
         const gender = document.getElementById('gender').value;
         const age = parseInt(document.getElementById('age').value);
@@ -473,41 +498,27 @@
             return;
         }
 
-        // BMR (Bazal Metabolizma Hızı)
         let bmr = gender === 'erkek' 
             ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
             : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
 
-        // TDEE (Sedanter / Hareketsiz varsayılan: x 1.2)
         let tdee = bmr * 1.2;
-
-        // Standart Güvenli Kalori Açığı/Fazlası (Haftada ortalama 0.5kg için günlük 500 kcal)
         let weightDiff = weight - targetWeight; 
         let dailyCalDiff = 0;
         
-        if (weightDiff > 0) {
-            // Kilo verme durumu
-            dailyCalDiff = 500; 
-        } else if (weightDiff < 0) {
-            // Kilo alma durumu
-            dailyCalDiff = -500;
-        }
+        if (weightDiff > 0) dailyCalDiff = 500; 
+        else if (weightDiff < 0) dailyCalDiff = -500;
 
         let dailyTarget = Math.round(tdee - dailyCalDiff);
-
-        // Sağlık sınırı (1200 altı tehlikeli)
         if (dailyTarget < 1200 && weightDiff > 0) dailyTarget = 1200;
 
         userProfile = { gender, age, height, weight, targetWeight, dailyTarget };
         localStorage.setItem('snapcal_profile', JSON.stringify(userProfile));
 
-        // Alert kaldırıldı, doğrudan ana sayfaya geçiş yapılıyor.
         document.getElementById('onboarding-screen').classList.remove('active');
         document.getElementById('bottom-nav').style.display = 'flex';
         updateDashboard();
         document.getElementById('home-screen').classList.add('active');
-        
-        // İlk nav-item'ı aktif et
         document.querySelectorAll('.nav-item')[0].classList.add('active');
     }
 
@@ -540,8 +551,6 @@
         if(!userProfile) return;
 
         const target = userProfile.dailyTarget;
-        
-        // Eklenen Rozetteki hedefi güncelle
         document.getElementById('ui-daily-target').innerText = target;
 
         const today = new Date().toLocaleDateString('tr-TR');
@@ -552,12 +561,10 @@
         document.getElementById('calories-eaten').innerText = todayEaten;
         document.getElementById('calories-total').innerText = `/ ${target} kcal`;
 
-        // Progress Çemberini Doldurma
         let percentage = (todayEaten / target) * 100;
         if(percentage > 100) percentage = 100;
         
         const circle = document.getElementById('calorie-progress');
-        // Eğer hedefi aştıysa kırmızı yap
         let color = todayEaten > target ? 'var(--danger)' : 'var(--primary-color)';
         
         circle.style.background = `conic-gradient(${color} ${percentage}%, #333 ${percentage}%)`;
@@ -580,7 +587,7 @@
         if (hideWarning === 'true') {
             document.getElementById('camera-input').click();
         } else {
-            document.getElementById('warning-modal').style.display = 'flex';
+            openModal('warning-modal');
         }
     }
 
@@ -593,11 +600,7 @@
         document.getElementById('camera-input').click();
     }
 
-    function closeModal(id) {
-        document.getElementById(id).style.display = 'none';
-    }
-
-    // --- FOTOĞRAF ÇEKİMİ VE GEMİNİ API ---
+    // --- FOTOĞRAF ÇEKİMİ VE GEMİNİ API (FALLBACK SİSTEMİ EKLENDİ) ---
     document.getElementById('camera-input').addEventListener('change', function(event) {
         const file = event.target.files[0];
         if (file) {
@@ -605,15 +608,15 @@
             reader.onloadend = function() {
                 const base64Data = reader.result.split(',')[1];
                 const mimeType = file.type;
-                analyzeFoodWithAI(base64Data, mimeType);
+                analyzeFoodWithAIFallback(base64Data, mimeType);
             }
             reader.readAsDataURL(file);
         }
         event.target.value = '';
     });
 
-    async function analyzeFoodWithAI(base64Data, mimeType) {
-        document.getElementById('loading-modal').style.display = 'flex';
+    async function analyzeFoodWithAIFallback(base64Data, mimeType) {
+        openModal('loading-modal');
 
         const promptText = `Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek yoksa 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ve kısa bir özet ver. Lütfen yanıtını tam olarak şu formatta ver (Başka hiçbir giriş cümlesi kullanma):
 Yemek: [Yemeğin Adı]
@@ -627,36 +630,48 @@ Yağ: [Sayı]g
             contents: [{
                 parts: [
                     { text: promptText },
-                    {
-                        inlineData: {
-                            mimeType: mimeType,
-                            data: base64Data
-                        }
-                    }
+                    { inlineData: { mimeType: mimeType, data: base64Data } }
                 ]
             }]
         };
 
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
+        // API'nin hata vermemesi için olası model isimleri listesi (Yedekleme/Fallback)
+        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
+        let success = false;
+        let lastErrorMessage = "";
 
-            const data = await response.json();
-            closeModal('loading-modal');
+        for (let model of modelsToTry) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
 
-            if (data.error) {
-                throw new Error(data.error.message);
+                const data = await response.json();
+
+                // Eğer "Not Found" veya başka bir hata verdiyse döngüye devam edip diğer modeli dene
+                if (data.error) {
+                    lastErrorMessage = data.error.message;
+                    if (data.error.code === 404) continue; 
+                    throw new Error(data.error.message);
+                }
+
+                const aiText = data.candidates[0].content.parts[0].text;
+                closeModal('loading-modal');
+                processAIResult(aiText);
+                success = true;
+                break; // Başarılı olduysa döngüyü kır ve çık
+
+            } catch (error) {
+                lastErrorMessage = error.message;
             }
+        }
 
-            const aiText = data.candidates[0].content.parts[0].text;
-            processAIResult(aiText);
-
-        } catch (error) {
+        // Hiçbir model çalışmadıysa kullanıcıya hata göster
+        if (!success) {
             closeModal('loading-modal');
-            alert('Hata oluştu: ' + error.message);
+            alert(`Yapay Zeka ile iletişim kurulamadı. Hata: ${lastErrorMessage}\n\nLütfen API anahtarınızın doğru olduğundan veya internet bağlantınızdan emin olun.`);
         }
     }
 
@@ -689,7 +704,7 @@ Yağ: [Sayı]g
             };
         }
 
-        document.getElementById('result-modal').style.display = 'flex';
+        openModal('result-modal');
     }
 
     // --- GEÇMİŞ VE VERİ KAYDI ---
