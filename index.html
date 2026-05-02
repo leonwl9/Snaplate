@@ -97,7 +97,7 @@
 <body>
 
   <div id="setup-screen" class="screen hidden" style="padding-top: 40px;">
-    <h2 style="margin-bottom: 10px; font-size: 28px;">Hoş Geldin, Turgut! 💪</h2>
+    <h2 style="margin-bottom: 10px; font-size: 28px;">Hoş Geldin! 💪</h2>
     <p style="margin-bottom: 30px; color: var(--text-muted); font-size: 15px; line-height: 1.5;">SnapCal hedeflerine ulaşman için burada. Vücut ölçülerini girerek başlayalım.</p>
     
     <div class="input-group">
@@ -454,13 +454,13 @@
       analyzeImageWithGemini(base64Data);
     }
 
-    // Gemini Vision API İsteği (v1 ve flash-latest Düzeltmesi)
+    // Gemini Vision API İsteği (GÜNCEL MODEL: gemini-2.5-flash)
     async function analyzeImageWithGemini(base64Image) {
       document.getElementById('loading-overlay').classList.remove('hidden');
       document.getElementById('loading-overlay').style.display = 'flex';
       
-      // BU SATIR ÇOK ÖNEMLİ: v1beta ve gemini-1.5-flash KALKTI, YERİNE v1 ve flash-latest GELDİ
-      const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+      // İŞTE BÜTÜN SORUNU ÇÖZEN SATIR: Eski 1.5 modeli yerine aktif olan gemini-2.5-flash modeline geçtik!
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       
       const promptText = `Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek veya içecek yoksa sadece 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ver. Format şu şekilde olsun (Asla markdown veya json kullanma):
 Yemek: [Yemek Adı]
