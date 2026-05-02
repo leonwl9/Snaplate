@@ -18,8 +18,8 @@
             --bg-color: #0d0f12;
             --card-bg: #1a1d24;
             --accent: #ccff00; /* Sportif Neon Yeşil */
-            --accent-glow: rgba(211, 75, 37);
-            --text-main: #ff4d4d;
+            --accent-glow: rgba(204, 255, 0, 0.4);
+            --text-main: #ffffff;
             --text-muted: #8892b0;
             --danger: #ff4d4d;
         }
@@ -471,29 +471,23 @@
             document.getElementById('loadingModal').style.display = 'flex';
 
             try {
-                // Resmi Base64'e çevir
-                const base64String = await convertToBase64(file);
-                // "data:image/jpeg;base64," kısmını at
-                const base64Data = base64String.split(',')[1];
-                const mimeType = file.type || "image/jpeg";
+              const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-                // Gemini API Çağrısı (Kesin endpoint: v1beta ve gemini-1.5-flash)
-                const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                
-                const requestBody = {
-                    "contents": [{
-                        "parts": [
-                            {"text": "Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek yoksa 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ve kısa bir özet ver."},
-                            {
-                                "inline_data": {
-                                    "mime_type": mimeType,
-                                    "data": base64Data
-                                }
-                            }
-                        ]
-                    }]
-                };
-
+// 2. Request body içindeki model ismini kaldırdık
+// (API zaten URL'den hangi modeli kullandığınızı biliyor)
+const requestBody = {
+    "contents": [{
+        "parts": [
+            {"text": "Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek yoksa 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ve kısa bir özet ver."},
+            {
+                "inline_data": {
+                    "mime_type": mimeType,
+                    "data": base64Data
+                }
+            }
+        ]
+    }]
+};
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
