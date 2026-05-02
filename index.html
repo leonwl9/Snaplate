@@ -3,622 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- iOS PWA Standartları -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SnapCal">
-    <title>SnapCal - Yapay Zeka Diyet Asistanı</title>
-    
-    <!-- Google Fonts & FontAwesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <title>SnapCal - Kişisel</title>
     <style>
-        :root {
-            --bg-color: #0d0f12;
-            --card-bg: #1a1d24;
-            --accent: #ccff00; /* Sportif Neon Yeşil */
-            --accent-glow: rgba(204, 255, 0, 0.4);
-            --text-main: #ffffff;
-            --text-muted: #8892b0;
-            --danger: #ff4d4d;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        /* Ekranlar */
-        .screen {
-            display: none;
-            flex: 1;
-            padding: 20px;
-            padding-bottom: 90px;
-            overflow-y: auto;
-            animation: fadeIn 0.3s ease;
-        }
-        .screen.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Başlıklar */
-        h1, h2 { color: var(--text-main); font-weight: 800; margin-bottom: 15px; }
-        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-        .text-accent { color: var(--accent); }
-
-        /* Form Elemanları */
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
-        input, select {
-            width: 100%; padding: 15px; border-radius: 12px;
-            background: var(--card-bg); border: 1px solid #2d323e;
-            color: white; font-size: 16px; outline: none; transition: 0.3s;
-        }
-        input:focus, select:focus { border-color: var(--accent); }
-
-        /* Butonlar */
-        .btn {
-            width: 100%; padding: 16px; border-radius: 15px;
-            background: var(--accent); color: #000; font-weight: 800;
-            font-size: 16px; border: none; cursor: pointer;
-            box-shadow: 0 4px 15px var(--accent-glow); transition: 0.2s;
-            text-align: center;
-        }
-        .btn:active { transform: scale(0.98); }
-        .btn-outline {
-            background: transparent; border: 2px solid var(--text-muted);
-            color: var(--text-main); box-shadow: none;
-        }
-
-        /* Alt Navigasyon */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%;
-            background: rgba(26, 29, 36, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; padding: 15px 0;
-            border-top: 1px solid #2d323e; z-index: 100;
-        }
-        .nav-item {
-            color: var(--text-muted); font-size: 24px; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; transition: 0.3s;
-        }
-        .nav-item span { font-size: 10px; margin-top: 5px; font-weight: 600; }
-        .nav-item.active { color: var(--accent); }
-
-        /* Ana Ekran İlerlemeler */
-        .dashboard-header { background: var(--card-bg); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 30px; border: 1px solid #2d323e;}
-        .progress-container { width: 100%; background: #2d323e; border-radius: 10px; height: 12px; margin: 15px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease; }
-        .cal-info { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); font-weight: 600;}
-
-        /* Dev Kamera Butonu */
-        .scan-wrapper { display: flex; justify-content: center; align-items: center; margin: 40px 0; }
-        .scan-btn {
-            width: 180px; height: 180px; border-radius: 50%;
-            background: var(--bg-color); border: 4px solid var(--accent);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: var(--accent); font-size: 60px; cursor: pointer;
-            box-shadow: 0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-glow);
-            transition: 0.3s;
-        }
-        .scan-btn span { font-size: 16px; font-weight: 800; margin-top: 10px; text-transform: uppercase; }
-        .scan-btn:active { transform: scale(0.95); }
-
-        /* Pop-up Modallar */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content {
-            background: var(--card-bg); width: 90%; max-width: 400px;
-            padding: 25px; border-radius: 20px; border: 1px solid #2d323e;
-            text-align: center;
-        }
-        .checkbox-group { display: flex; align-items: center; margin: 20px 0; text-align: left;}
-        .checkbox-group input { width: 20px; height: 20px; margin-right: 10px; }
-
-        /* Geçmiş Listesi */
-        .meal-card {
-            background: var(--card-bg); padding: 15px; border-radius: 15px;
-            margin-bottom: 15px; border: 1px solid #2d323e;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .meal-info h3 { margin-bottom: 5px; font-size: 16px; color: #fff;}
-        .meal-info p { font-size: 12px; color: var(--text-muted); }
-        .meal-cal { font-weight: 800; color: var(--accent); font-size: 18px; }
-
-        /* Loading */
-        .loader {
-            border: 5px solid #2d323e; border-top: 5px solid var(--accent);
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite; margin: 0 auto 15px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .api-warning { background: rgba(255, 77, 77, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none;}
+        :root { --bg: #121212; --accent: #00e676; --text: #ffffff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .hidden { display: none; }
+        button { background: var(--accent); border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        #camera-btn { height: 150px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <!-- 1. KURULUM EKRANI -->
-    <div id="screen-onboarding" class="screen">
-        <h1>Snap<span class="text-accent">Cal</span>'a Hoş Geldin</h1>
-        <p class="subtitle">Seni tanıyabilmemiz için birkaç bilgiye ihtiyacımız var.</p>
-
-        <div class="input-group">
-            <label>Cinsiyet</label>
-            <select id="reg-gender">
-                <option value="male">Erkek</option>
-                <option value="female">Kadın</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label>Yaş</label>
-            <input type="number" id="reg-age" placeholder="Örn: 25">
-        </div>
-        <div class="input-group">
-            <label>Boy (cm)</label>
-            <input type="number" id="reg-height" placeholder="Örn: 175">
-        </div>
-        <div class="input-group">
-            <label>Mevcut Kilo (kg)</label>
-            <input type="number" id="reg-weight" placeholder="Örn: 75">
-        </div>
-        <div class="input-group">
-            <label>Hedef Kilo (kg)</label>
-            <input type="number" id="reg-target" placeholder="Örn: 70">
-        </div>
-
-        <button class="btn" onclick="saveProfile()">Başla</button>
+    <div id="profile-section">
+        <h2>Hedefini Belirle</h2>
+        <input type="number" id="age" placeholder="Yaş">
+        <input type="number" id="weight" placeholder="Kilo (kg)">
+        <input type="number" id="height" placeholder="Boy (cm)">
+        <button onclick="saveProfile()">Kaydet</button>
     </div>
 
-    <!-- 2. ANA EKRAN -->
-    <div id="screen-home" class="screen">
-        <div class="api-warning" id="apiWarningMsg">
-            <i class="fa-solid fa-triangle-exclamation"></i> Lütfen Ayarlar sekmesinden Gemini API anahtarınızı girin.
-        </div>
+    <div id="main-section" class="hidden">
+        <h2 id="daily-limit">Günlük Limit: -</h2>
+        <button id="camera-btn" onclick="openCamera()">📸 Öğününü Tara</button>
+        <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" onchange="processImage(event)">
+        <div id="result"></div>
+    </div>
 
-        <div class="dashboard-header">
-            <h2 id="home-greeting">Merhaba!</h2>
-            <div class="progress-container">
-                <div class="progress-bar" id="daily-progress"></div>
-            </div>
-            <div class="cal-info">
-                <span id="cal-consumed">0 kcal alındı</span>
-                <span id="cal-target" class="text-accent">Hedef: 0 kcal</span>
-            </div>
-        </div>
+    <div id="settings-section">
+        <input type="text" id="api-key" placeholder="Gemini API Anahtarı">
+        <button onclick="saveApi()">API Kaydet</button>
+    </div>
 
-        <div class="scan-wrapper">
-            <!-- Gizli dosya yükleme (Kamera için) -->
-            <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" onchange="processImage(event)">
+<script>
+    // Profil Kaydı
+    function saveProfile() {
+        localStorage.setItem('profile', JSON.stringify({ age: document.getElementById('age').value }));
+        document.getElementById('profile-section').classList.add('hidden');
+        document.getElementById('main-section').classList.remove('hidden');
+    }
+
+    function saveApi() {
+        localStorage.setItem('geminiApiKey', document.getElementById('api-key').value);
+        alert('API Anahtarı kaydedildi!');
+    }
+
+    // Kamera
+    function openCamera() {
+        if (!localStorage.getItem('geminiApiKey')) return alert('Önce API anahtarını gir!');
+        document.getElementById('file-input').click();
+    }
+
+    // Gemini API Çağrısı (Hata Giderilmiş Versiyon)
+    async function processImage(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64 = reader.result.split(',')[1];
+            const apiKey = localStorage.getItem('geminiApiKey');
             
-            <div class="scan-btn" onclick="openCameraFlow()">
-                <i class="fa-solid fa-camera"></i>
-                <span>Öğün Tara</span>
-            </div>
-        </div>
-        <p style="text-align:center; color:var(--text-muted); font-size:14px;">Kalorini otomatik hesaplamak için yemeğinin fotoğrafını çek.</p>
-    </div>
+            // v1 Endpoint'i kullanıldı
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    <!-- 3. GEÇMİŞ EKRANI -->
-    <div id="screen-history" class="screen">
-        <h2>Geçmiş Öğünlerim</h2>
-        <p class="subtitle">Bugün yediklerin ve kalori geçmişin.</p>
-        <div id="history-list">
-            <!-- JavaScript ile doldurulacak -->
-        </div>
-    </div>
-
-    <!-- 4. AYARLAR EKRANI -->
-    <div id="screen-settings" class="screen">
-        <h2>Ayarlar</h2>
-        <p class="subtitle">Uygulama tercihlerinizi düzenleyin.</p>
-
-        <div class="dashboard-header" style="text-align: left;">
-            <h3 style="font-size: 16px; margin-bottom: 10px;">Google Gemini API</h3>
-            <p style="font-size: 12px; color:var(--text-muted); margin-bottom: 15px;">Yapay zeka analizi için gereklidir (gemini-1.5-flash).</p>
-            <input type="password" id="set-api-key" placeholder="AIzaSy...">
-            <button class="btn" style="margin-top: 15px; padding: 10px;" onclick="saveApiKey()">API Anahtarını Kaydet</button>
-        </div>
-
-        <div class="dashboard-header" style="text-align: left;">
-            <h3 style="font-size: 16px; margin-bottom: 10px;">Profili Sıfırla</h3>
-            <p style="font-size: 12px; color:var(--text-muted); margin-bottom: 15px;">Tüm verilerinizi (kilo, kalori ve geçmiş) siler.</p>
-            <button class="btn btn-outline" style="padding: 10px; border-color: var(--danger); color: var(--danger);" onclick="resetApp()">Uygulamayı Sıfırla</button>
-        </div>
-    </div>
-
-    <!-- ALT NAVİGASYON -->
-    <div class="bottom-nav" id="bottom-nav" style="display: none;">
-        <div class="nav-item active" onclick="switchTab('home')" id="tab-home">
-            <i class="fa-solid fa-house"></i>
-            <span>Ana Sayfa</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('history')" id="tab-history">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <span>Geçmiş</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('settings')" id="tab-settings">
-            <i class="fa-solid fa-gear"></i>
-            <span>Ayarlar</span>
-        </div>
-    </div>
-
-    <!-- MODAL: Kamera Uyarısı -->
-    <div class="modal-overlay" id="cameraWarningModal">
-        <div class="modal-content">
-            <i class="fa-solid fa-circle-exclamation" style="font-size: 40px; color: var(--accent); margin-bottom: 15px;"></i>
-            <h3>Uyarı</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">
-                Lütfen sadece yediğiniz öğünleri taratın. Yemek dışı objeler taranmamalıdır.
-            </p>
-            <div class="checkbox-group">
-                <input type="checkbox" id="dontShowWarning">
-                <label for="dontShowWarning" style="font-size: 14px;">Bir daha gösterme</label>
-            </div>
-            <button class="btn" onclick="proceedToCamera()">Anladım, Devam Et</button>
-            <button class="btn btn-outline" style="margin-top: 10px;" onclick="document.getElementById('cameraWarningModal').style.display='none'">İptal</button>
-        </div>
-    </div>
-
-    <!-- MODAL: Yükleniyor / Analiz -->
-    <div class="modal-overlay" id="loadingModal">
-        <div class="modal-content">
-            <div class="loader"></div>
-            <h3 id="loadingText">Gemini Yemeği Analiz Ediyor...</h3>
-            <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">Bu işlem birkaç saniye sürebilir.</p>
-        </div>
-    </div>
-
-    <!-- MODAL: Analiz Sonucu -->
-    <div class="modal-overlay" id="resultModal">
-        <div class="modal-content" style="text-align: left;">
-            <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent);">Analiz Sonucu</h3>
-            <div id="resultText" style="font-size: 14px; line-height: 1.6; color: #ddd; max-height: 250px; overflow-y: auto; background: var(--bg-color); padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
-            
-            <label style="font-size: 12px; color: var(--text-muted);">Günlüğe Eklenecek Kalori:</label>
-            <input type="number" id="detectedCalories" style="margin-top: 5px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--accent);">
-            
-            <button class="btn" onclick="saveMealToHistory()">Öğünü Kaydet</button>
-            <button class="btn btn-outline" style="margin-top: 10px;" onclick="document.getElementById('resultModal').style.display='none'">İptal Et</button>
-        </div>
-    </div>
-
-    <script>
-        // --- VERİTABANI (LocalStorage) ANAHTARLARI ---
-        const DB_PROFILE = 'snapcal_profile';
-        const DB_APIKEY = 'snapcal_apikey';
-        const DB_HISTORY = 'snapcal_history';
-        const DB_WARNING = 'snapcal_hide_warning';
-
-        // --- UYGULAMA BAŞLATMA ---
-        document.addEventListener('DOMContentLoaded', () => {
-            checkUserStatus();
-        });
-
-        function checkUserStatus() {
-            const profile = localStorage.getItem(DB_PROFILE);
-            if (!profile) {
-                showScreen('onboarding');
-            } else {
-                document.getElementById('bottom-nav').style.display = 'flex';
-                updateDashboard();
-                showScreen('home');
-                
-                // API key kontrolü
-                if(!localStorage.getItem(DB_APIKEY)) {
-                    document.getElementById('apiWarningMsg').style.display = 'block';
-                } else {
-                    document.getElementById('apiWarningMsg').style.display = 'none';
-                    document.getElementById('set-api-key').value = localStorage.getItem(DB_APIKEY);
-                }
-            }
-        }
-
-        // --- EKRAN YÖNETİMİ ---
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${screenId}`).classList.add('active');
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            showScreen(tabId);
-            if(tabId === 'history') loadHistory();
-            if(tabId === 'home') updateDashboard();
-        }
-
-        // --- PROFİL VE KALORİ HESAPLAMA (Harris-Benedict) ---
-        function saveProfile() {
-            const gender = document.getElementById('reg-gender').value;
-            const age = parseInt(document.getElementById('reg-age').value);
-            const height = parseInt(document.getElementById('reg-height').value);
-            const weight = parseInt(document.getElementById('reg-weight').value);
-            const target = parseInt(document.getElementById('reg-target').value);
-
-            if(!age || !height || !weight || !target) {
-                alert("Lütfen tüm alanları doldurun.");
-                return;
-            }
-
-            // Harris-Benedict BMR Hesaplama
-            let bmr = 0;
-            if (gender === 'male') {
-                bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-            } else {
-                bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
-            }
-
-            // Hareket çarpanı (Hafif aktif kabul edelim)
-            let dailyMaintenance = bmr * 1.2;
-            let targetCalories = dailyMaintenance;
-
-            // Hedefe göre kalori düzenleme (Kilo verme için -500, alma için +500)
-            if (target < weight) {
-                targetCalories -= 500;
-            } else if (target > weight) {
-                targetCalories += 500;
-            }
-
-            targetCalories = Math.round(targetCalories);
-
-            const profile = { gender, age, height, weight, targetWeight: target, targetCalories };
-            localStorage.setItem(DB_PROFILE, JSON.stringify(profile));
-
-            document.getElementById('bottom-nav').style.display = 'flex';
-            checkUserStatus();
-        }
-
-        // --- API ANAHTARI VE AYARLAR ---
-        function saveApiKey() {
-            const key = document.getElementById('set-api-key').value.trim();
-            if(key) {
-                localStorage.setItem(DB_APIKEY, key);
-                alert("API Anahtarı başarıyla kaydedildi.");
-                document.getElementById('apiWarningMsg').style.display = 'none';
-            }
-        }
-
-        function resetApp() {
-            if(confirm("Tüm verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        // --- ANA EKRAN GÜNCELLEME ---
-        function updateDashboard() {
-            const profile = JSON.parse(localStorage.getItem(DB_PROFILE));
-            if(!profile) return;
-
-            document.getElementById('cal-target').innerText = `Hedef: ${profile.targetCalories} kcal`;
-
-            // Bugünün kalorisini hesapla
-            const history = JSON.parse(localStorage.getItem(DB_HISTORY)) || [];
-            const todayStr = new Date().toLocaleDateString('tr-TR');
-            
-            let todayCalories = 0;
-            history.forEach(item => {
-                if(item.date === todayStr) {
-                    todayCalories += item.calories;
-                }
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: "Bu yemeğin kalori ve besin değerlerini kısa özetle." }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
+                })
             });
 
-            document.getElementById('cal-consumed').innerText = `${todayCalories} kcal alındı`;
-
-            // Progress Bar
-            let percent = (todayCalories / profile.targetCalories) * 100;
-            if(percent > 100) percent = 100;
-            document.getElementById('daily-progress').style.width = `${percent}%`;
-
-            // Fazla kalori uyarısı renk değişimi
-            if(percent >= 100) {
-                document.getElementById('daily-progress').style.background = 'var(--danger)';
+            const data = await response.json();
+            if (data.candidates) {
+                document.getElementById('result').innerText = data.candidates[0].content.parts[0].text;
             } else {
-                document.getElementById('daily-progress').style.background = 'var(--accent)';
+                alert("Hata: " + JSON.stringify(data.error));
             }
-        }
+        };
+        reader.readAsDataURL(file);
+    }
 
-        // --- KAMERA AKIŞI ---
-        function openCameraFlow() {
-            const hideWarning = localStorage.getItem(DB_WARNING) === 'true';
-            if(hideWarning) {
-                proceedToCamera();
-            } else {
-                document.getElementById('cameraWarningModal').style.display = 'flex';
-            }
-        }
-
-        function proceedToCamera() {
-            const dontShow = document.getElementById('dontShowWarning').checked;
-            if(dontShow) {
-                localStorage.setItem(DB_WARNING, 'true');
-            }
-            document.getElementById('cameraWarningModal').style.display = 'none';
-            document.getElementById('cameraInput').click();
-        }
-
-        // --- GÖRÜNTÜ İŞLEME VE GEMINI API ---
-        async function processImage(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-
-            const apiKey = localStorage.getItem(DB_APIKEY);
-            if(!apiKey) {
-                alert("Lütfen Ayarlar kısmından Gemini API anahtarınızı girin.");
-                switchTab('settings');
-                return;
-            }
-
-            document.getElementById('loadingModal').style.display = 'flex';
-
-            try {
-                // Resmi Base64'e çevir
-                const base64String = await convertToBase64(file);
-                // "data:image/jpeg;base64," kısmını at
-                const base64Data = base64String.split(',')[1];
-                const mimeType = file.type || "image/jpeg";
-
-                // Gemini API Çağrısı (Kesin endpoint: v1beta ve gemini-1.5-flash)
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                
-                const requestBody = {
-                    "contents": [{
-                        "parts": [
-                            {"text": "Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek yoksa 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ve kısa bir özet ver."},
-                            {
-                                "inline_data": {
-                                    "mime_type": mimeType,
-                                    "data": base64Data
-                                }
-                            }
-                        ]
-                    }]
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
-
-                const data = await response.json();
-                
-                if(!response.ok) {
-                    throw new Error(data.error?.message || "API Hatası");
-                }
-
-                const aiText = data.candidates[0].content.parts[0].text;
-                
-                // Modalı kapat ve sonucu göster
-                document.getElementById('loadingModal').style.display = 'none';
-                showResult(aiText);
-
-            } catch (error) {
-                document.getElementById('loadingModal').style.display = 'none';
-                alert("Bir hata oluştu: " + error.message);
-            } finally {
-                // Input'u sıfırla ki aynı fotoğrafı tekrar seçebilsin
-                event.target.value = '';
-            }
-        }
-
-        function convertToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        // --- SONUÇ GÖSTERİMİ VE KAYIT ---
-        let currentMealText = "";
-
-        function showResult(text) {
-            currentMealText = text;
-            
-            // Metni formatla (Markdown yıldızlarını temizle)
-            const formattedText = text.replace(/\*\*/g, '').replace(/\*/g, '•');
-            document.getElementById('resultText').innerText = formattedText;
-
-            // Yapay zeka metninden "120 kcal", "450 kalori" gibi verileri çekmeye çalış
-            const calMatch = text.match(/(\d+)\s*(kcal|kalori)/i);
-            let extractedCalories = calMatch ? parseInt(calMatch[1]) : 0;
-            
-            document.getElementById('detectedCalories').value = extractedCalories;
-            document.getElementById('resultModal').style.display = 'flex';
-        }
-
-        function saveMealToHistory() {
-            const cal = parseInt(document.getElementById('detectedCalories').value);
-            if(isNaN(cal) || cal <= 0) {
-                alert("Lütfen geçerli bir kalori değeri girin.");
-                return;
-            }
-
-            const now = new Date();
-            const meal = {
-                id: Date.now(),
-                date: now.toLocaleDateString('tr-TR'),
-                time: now.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}),
-                calories: cal,
-                summary: "AI Analizli Öğün" // Kısa başlık
-            };
-
-            const history = JSON.parse(localStorage.getItem(DB_HISTORY)) || [];
-            history.unshift(meal); // En başa ekle
-            localStorage.setItem(DB_HISTORY, JSON.stringify(history));
-
-            document.getElementById('resultModal').style.display = 'none';
-            updateDashboard();
-            
-            // Animasyonlu geri bildirim
-            const scanBtn = document.querySelector('.scan-btn');
-            scanBtn.style.background = 'var(--accent)';
-            scanBtn.style.color = '#000';
-            setTimeout(() => {
-                scanBtn.style.background = 'var(--bg-color)';
-                scanBtn.style.color = 'var(--accent)';
-            }, 500);
-        }
-
-        // --- GEÇMİŞ YÜKLEME ---
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem(DB_HISTORY)) || [];
-            const listDiv = document.getElementById('history-list');
-            listDiv.innerHTML = '';
-
-            if(history.length === 0) {
-                listDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:30px;">Henüz kaydedilmiş bir öğününüz yok.</p>';
-                return;
-            }
-
-            let currentDate = '';
-
-            history.forEach(item => {
-                // Tarih başlıkları
-                if(item.date !== currentDate) {
-                    const dateHeader = document.createElement('h3');
-                    dateHeader.style.marginTop = '20px';
-                    dateHeader.style.marginBottom = '10px';
-                    dateHeader.style.color = 'var(--accent)';
-                    dateHeader.style.fontSize = '14px';
-                    dateHeader.innerText = item.date === new Date().toLocaleDateString('tr-TR') ? 'Bugün' : item.date;
-                    listDiv.appendChild(dateHeader);
-                    currentDate = item.date;
-                }
-
-                const card = document.createElement('div');
-                card.className = 'meal-card';
-                card.innerHTML = `
-                    <div class="meal-info">
-                        <h3>${item.summary}</h3>
-                        <p><i class="fa-regular fa-clock"></i> ${item.time}</p>
-                    </div>
-                    <div class="meal-cal">+${item.calories} kcal</div>
-                `;
-                listDiv.appendChild(card);
-            });
-        }
-    </script>
+    // Başlangıç Kontrolü
+    if (localStorage.getItem('profile')) {
+        document.getElementById('profile-section').classList.add('hidden');
+        document.getElementById('main-section').classList.remove('hidden');
+    }
+</script>
 </body>
 </html>
