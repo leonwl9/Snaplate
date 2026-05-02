@@ -171,7 +171,7 @@
       <div class="dashboard-card" style="text-align: left;">
         <h3 style="margin-bottom: 10px; font-size: 16px;">Gemini API Anahtarı</h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;">
-          Görsel analizi yapabilmemiz için Google AI Studio'dan aldığın API anahtarını buraya yapıştır. Verilerin sadece cihazında kalır.
+          Görsel analizi yapabilmemiz için Google AI Studio'dan aldığın API anahtarını buraya yapıştır.
         </p>
         <div class="input-group">
           <input type="password" id="api-key-input" placeholder="AIzaSy...">
@@ -215,12 +215,13 @@
     <div class="camera-controls">
       <button class="close-camera" onclick="closeCamera()">İptal</button>
       <button class="capture-btn" onclick="takePhoto()"></button>
-      <div style="width: 45px;"></div> </div>
+      <div style="width: 45px;"></div>
+    </div>
   </div>
 
   <div id="loading-overlay" class="popup-overlay hidden">
     <div class="loader"></div>
-    <p style="font-weight: 600; font-size: 16px; margin-top: 15px;">Gemini Öğününü Analiz Ediyor...</p>
+    <p style="font-weight: 600; font-size: 16px; margin-top: 15px;">Gemini 1.5 Pro Öğününü Analiz Ediyor...</p>
   </div>
 
   <div id="result-modal" class="popup-overlay hidden">
@@ -232,13 +233,11 @@
   </div>
 
   <script>
-    // State ve Hafıza Değişkenleri
     let profile = JSON.parse(localStorage.getItem('snapcal_profile'));
     let apiKey = localStorage.getItem('snapcal_apikey');
     let history = JSON.parse(localStorage.getItem('snapcal_history')) || [];
     let stream = null;
 
-    // Uygulama Başlatıcı
     window.onload = () => {
       if (!profile) {
         document.getElementById('setup-screen').classList.remove('hidden');
@@ -249,7 +248,6 @@
       }
     };
 
-    // Harris-Benedict Formülü ile Kalori Hesaplama
     function saveProfile() {
       const age = parseInt(document.getElementById('setup-age').value);
       const gender = document.getElementById('setup-gender').value;
@@ -262,17 +260,11 @@
         return;
       }
 
-      let bmr = 0;
-      if (gender === 'male') {
-        bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-      } else {
-        bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
-      }
+      let bmr = gender === 'male' 
+        ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+        : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
       
-      // Standart aktif yaşam (spor/fitness) katsayısı olarak 1.55 çarpanı
       let dailyCalories = Math.round(bmr * 1.55);
-
-      // Hedefe göre basit kalori açığı/fazlası ayarı
       if (targetWeight < weight) dailyCalories -= 350; 
       if (targetWeight > weight) dailyCalories += 350;
 
@@ -281,36 +273,32 @@
 
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('app-view').classList.remove('hidden');
-      
       updateDashboard();
     }
 
-    // API Ayarlarını Kaydetme
     function saveApiKey() {
       const key = document.getElementById('api-key-input').value.trim();
       if (key) {
         apiKey = key;
         localStorage.setItem('snapcal_apikey', apiKey);
-        alert("API Anahtarın güvenle cihazına kaydedildi!");
+        alert("API Anahtarın kaydedildi!");
       }
     }
 
-    // Sıfırlama Mekanizması
     function resetApp() {
-      if(confirm("DİKKAT: Tüm profilin, ölçülerin ve geçmiş yemek kayıtların kalıcı olarak silinecek. Onaylıyor musun?")) {
+      if(confirm("Tüm verilerin silinecek. Onaylıyor musun?")) {
         localStorage.clear();
         location.reload();
       }
     }
 
-    // Sekmeler Arası Geçiş
     function showTab(tabId) {
-      document.getElementById('home-tab').classList.add('hidden');
-      document.getElementById('history-tab').classList.add('hidden');
-      document.getElementById('settings-tab').classList.add('hidden');
-      
-      document.getElementById('nav-home').classList.remove('active');
-      document.getElementById('nav-history').classList.remove('active');
+      ['home-tab', 'history-tab', 'settings-tab'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      ['nav-home', 'nav-history'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
       
       document.getElementById(tabId).classList.remove('hidden');
       
@@ -324,54 +312,38 @@
       }
     }
 
-    // Dashboard Güncelleme
     function updateDashboard() {
       if (!profile) return;
-      
       document.getElementById('calories-target').innerText = profile.dailyCalories;
       
       const today = new Date().toLocaleDateString('tr-TR');
-      
-      // Bugün tüketilen toplam kalori
       const consumedToday = history
         .filter(item => item.date === today)
         .reduce((sum, item) => sum + item.calories, 0);
       
       document.getElementById('calories-consumed').innerText = consumedToday;
-      
       const remaining = profile.dailyCalories - consumedToday;
       const remainingElem = document.getElementById('calories-remaining');
       
       if (remaining <= 0) {
         remainingElem.innerText = "0";
         remainingElem.style.color = "var(--danger)";
-        document.querySelector('.calorie-circle').style.borderColor = "var(--danger)";
-        document.querySelector('.calorie-circle').style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.15)";
       } else {
         remainingElem.innerText = remaining;
         remainingElem.style.color = "var(--text)";
-        document.querySelector('.calorie-circle').style.borderColor = "var(--accent)";
-        document.querySelector('.calorie-circle').style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.15)";
       }
     }
 
-    // Geçmiş Kayıtlarını Çizme
     function renderHistory() {
       const list = document.getElementById('history-list');
       list.innerHTML = '';
-      
       if (history.length === 0) {
-        list.innerHTML = '<p style="color: var(--text-muted); text-align: center; margin-top: 40px;">Henüz taranmış bir öğünün yok. Hadi ilk yemeğini tara!</p>';
+        list.innerHTML = '<p style="color: var(--text-muted); text-align: center; margin-top: 40px;">Henüz taranmış bir öğünün yok.</p>';
         return;
       }
       
-      // Günlere göre gruplama yaparak gösterim (En yeniden eskiye)
-      const reversedHistory = [...history].reverse();
-      
-      reversedHistory.forEach(item => {
-        // O günün toplam hedef doldurma oranını hesapla
+      [...history].reverse().forEach(item => {
         const percentage = Math.min(100, Math.round((item.calories / profile.dailyCalories) * 100));
-        
         const div = document.createElement('div');
         div.className = 'history-item';
         div.innerHTML = `
@@ -389,16 +361,13 @@
       });
     }
 
-    // Kamera ve Uyarı Akışı
     function startCameraFlow() {
       if (!apiKey) {
-        alert("Lütfen önce Ayarlar sekmesine gidip Gemini API anahtarını gir.");
+        alert("Lütfen önce Ayarlar sekmesine gidip API anahtarını gir.");
         showTab('settings-tab');
         return;
       }
-
-      const warningDismissed = localStorage.getItem('snapcal_camera_warning_dismissed');
-      if (warningDismissed === 'true') {
+      if (localStorage.getItem('snapcal_camera_warning_dismissed') === 'true') {
         openCamera();
       } else {
         document.getElementById('camera-warning').classList.remove('hidden');
@@ -406,8 +375,7 @@
     }
 
     function acceptCameraWarning() {
-      const dontShow = document.getElementById('dont-show-again').checked;
-      if (dontShow) {
+      if (document.getElementById('dont-show-again').checked) {
         localStorage.setItem('snapcal_camera_warning_dismissed', 'true');
       }
       document.getElementById('camera-warning').classList.add('hidden');
@@ -416,24 +384,17 @@
 
     async function openCamera() {
       document.getElementById('camera-modal').classList.remove('hidden');
-      const video = document.getElementById('video-stream');
-      
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' }, // Arka kamerayı zorlar
-          audio: false 
-        });
-        video.srcObject = stream;
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        document.getElementById('video-stream').srcObject = stream;
       } catch (err) {
-        alert("Kameraya erişilemedi. Lütfen tarayıcı izinlerini kontrol et.");
+        alert("Kameraya erişilemedi.");
         closeCamera();
       }
     }
 
     function closeCamera() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      if (stream) stream.getTracks().forEach(track => track.stop());
       document.getElementById('camera-modal').classList.add('hidden');
     }
 
@@ -441,26 +402,20 @@
       const video = document.getElementById('video-stream');
       const canvas = document.getElementById('photo-canvas');
       const ctx = canvas.getContext('2d');
-      
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Fotoğrafı Base64 yapısına çevirip boyutu küçültüyoruz
-      const base64DataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      const base64Data = base64DataUrl.split(',')[1];
-      
+      const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
       closeCamera();
       analyzeImageWithGemini(base64Data);
     }
 
-    // Gemini Vision API İsteği (GÜNCEL MODEL: gemini-2.5-flash)
+    // YENİ MODEL: gemini-1.5-pro
     async function analyzeImageWithGemini(base64Image) {
       document.getElementById('loading-overlay').classList.remove('hidden');
       document.getElementById('loading-overlay').style.display = 'flex';
       
-      // İŞTE BÜTÜN SORUNU ÇÖZEN SATIR: Eski 1.5 modeli yerine aktif olan gemini-2.5-flash modeline geçtik!
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
       
       const promptText = `Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek veya içecek yoksa sadece 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ver. Format şu şekilde olsun (Asla markdown veya json kullanma):
 Yemek: [Yemek Adı]
@@ -490,42 +445,32 @@ Yağ: [Sayı]`;
         document.getElementById('loading-overlay').classList.add('hidden');
         document.getElementById('loading-overlay').style.display = 'none';
 
-        if (data.error) {
-          throw new Error(data.error.message);
-        }
+        if (data.error) throw new Error(data.error.message);
 
         const aiResponseText = data.candidates[0].content.parts[0].text.trim();
         
-        // Yemek dışı obje uyarısı
         if (aiResponseText.toLowerCase().includes("lütfen bir yemek")) {
-            showResultModal("Hata", "Bu bir yemek fotoğrafı gibi görünmüyor. Lütfen sadece öğünlerini tarat.");
+            showResultModal("Hata", "Bu bir yemek fotoğrafı gibi görünmüyor.");
             return;
         }
-
         parseAndSaveMeal(aiResponseText);
 
       } catch (error) {
         document.getElementById('loading-overlay').classList.add('hidden');
         document.getElementById('loading-overlay').style.display = 'none';
-        showResultModal("API Hatası", "Bağlantı kurulamadı veya model bulunamadı.\n\nDetay: " + error.message);
-        console.error("Tam API Hatası:", error);
+        showResultModal("API Hatası", "Model bulunamadı veya bağlantı koptu.\n\nDetay: " + error.message);
       }
     }
 
-    // AI Çıktısını Ayrıştırma ve Kaydetme
     function parseAndSaveMeal(text) {
       let calMatch = text.match(/Kalori:\s*(\d+)/i) || text.match(/(\d+)\s*kcal/i);
       let calories = calMatch ? parseInt(calMatch[1]) : 0;
-      
       let proMatch = text.match(/Protein:\s*(\d+)/i);
       let protein = proMatch ? parseInt(proMatch[1]) : "?";
-      
       let carbMatch = text.match(/Karbonhidrat:\s*(\d+)/i);
       let carbs = carbMatch ? parseInt(carbMatch[1]) : "?";
-      
       let fatMatch = text.match(/Yağ:\s*(\d+)/i);
       let fat = fatMatch ? parseInt(fatMatch[1]) : "?";
-
       let nameMatch = text.match(/Yemek:\s*(.*)/i);
       let mealName = nameMatch ? nameMatch[1].trim() : "Tanımlanamayan Öğün";
 
@@ -534,16 +479,11 @@ Yağ: [Sayı]`;
         history.push({
           date: now.toLocaleDateString('tr-TR'),
           time: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute:'2-digit' }),
-          mealName: mealName,
-          calories: calories,
-          protein: protein,
-          carbs: carbs,
-          fat: fat
+          mealName: mealName, calories, protein, carbs, fat
         });
         localStorage.setItem('snapcal_history', JSON.stringify(history));
         updateDashboard();
         
-        // Başarı ekranını güzel bir formatta göster
         const htmlResult = `
           <strong style="color:var(--text); font-size:18px;">${mealName}</strong><br><br>
           🔥 <strong>${calories}</strong> kcal<br>
@@ -553,17 +493,14 @@ Yağ: [Sayı]`;
         `;
         showResultModal("Afiyet Olsun!", htmlResult, true);
       } else {
-         showResultModal("Anlaşılamadı", "Yemeğin kalori değeri bulunamadı. Lütfen fotoğrafı daha net çekmeyi dene.");
+         showResultModal("Anlaşılamadı", "Değerler bulunamadı. Fotoğrafı daha net çekmeyi dene.");
       }
     }
 
     function showResultModal(title, textOrHtml, isHtml = false) {
       document.getElementById('result-title').innerText = title;
-      if(isHtml) {
-        document.getElementById('result-text').innerHTML = textOrHtml;
-      } else {
-        document.getElementById('result-text').innerText = textOrHtml.replace(/\n/g, "\n");
-      }
+      if(isHtml) document.getElementById('result-text').innerHTML = textOrHtml;
+      else document.getElementById('result-text').innerText = textOrHtml;
       document.getElementById('result-modal').classList.remove('hidden');
     }
 
