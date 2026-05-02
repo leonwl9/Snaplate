@@ -454,12 +454,12 @@
       analyzeImageWithGemini(base64Data);
     }
 
-    // Gemini Vision API İsteği (404 Hatası Çözümlenmiş v1 Endpoint)
+    // Gemini Vision API İsteği (v1 ve flash-latest Düzeltmesi)
     async function analyzeImageWithGemini(base64Image) {
       document.getElementById('loading-overlay').classList.remove('hidden');
       document.getElementById('loading-overlay').style.display = 'flex';
       
-      // Sadece buradaki v1 stabil sürümü ve -latest takısı güncellendi
+      // BU SATIR ÇOK ÖNEMLİ: v1beta ve gemini-1.5-flash KALKTI, YERİNE v1 ve flash-latest GELDİ
       const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
       
       const promptText = `Bu fotoğraftaki yemeği analiz et. Ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalori, protein, karbonhidrat ve yağ miktarını söyle. Eğer fotoğrafta yemek veya içecek yoksa sadece 'Lütfen bir yemek fotoğrafı çekin' de. Sadece net rakamlar ver. Format şu şekilde olsun (Asla markdown veya json kullanma):
@@ -490,7 +490,6 @@ Yağ: [Sayı]`;
         document.getElementById('loading-overlay').classList.add('hidden');
         document.getElementById('loading-overlay').style.display = 'none';
 
-        // Hata yakalama mekanizması
         if (data.error) {
           throw new Error(data.error.message);
         }
