@@ -3,61 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Kalori Takip</title>
+    <title>Kalori Takip Pro</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --primary: #4caf50;
             --bg: #121212;
             --surface: #1e1e1e;
+            --surface-light: #2c2c2c;
             --text: #ffffff;
             --gray: #888888;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg); color: var(--text); overflow-x: hidden; }
         
-        .container { padding: 20px; padding-bottom: 80px; max-width: 500px; margin: 0 auto; }
+        .container { padding: 20px; padding-bottom: 90px; max-width: 500px; margin: 0 auto; }
         .hidden { display: none !important; }
         
-        /* Giriş Ekranı */
-        .login-box { display: flex; flex-direction: column; gap: 15px; margin-top: 50px; }
-        input { padding: 12px; border-radius: 8px; border: none; background: var(--surface); color: white; width: 100%; outline: none; }
-        button { padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; }
-        button:active { opacity: 0.8; }
+        /* Genel Girdiler ve Butonlar */
+        input { padding: 14px; border-radius: 8px; border: 1px solid #333; background: var(--surface-light); color: white; outline: none; font-size: 15px; }
+        input:focus { border-color: var(--primary); }
+        button { padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
 
         /* Ana Ekran - Kalori Barı */
-        .circle-wrap { margin: 40px auto; width: 200px; height: 200px; background: var(--surface); border-radius: 50%; position: relative; }
-        .circle { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--primary) 0%, var(--surface) 0%); display: flex; align-items: center; justify-content: center; }
-        .inner-circle { width: 170px; height: 170px; border-radius: 50%; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .calories-text { font-size: 32px; font-weight: bold; }
-        .goal-text { font-size: 14px; color: var(--gray); }
+        .circle-wrap { margin: 40px auto; width: 220px; height: 220px; background: var(--surface); border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .circle { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--primary) 0%, var(--surface) 0%); display: flex; align-items: center; justify-content: center; transition: background 0.5s ease-out; }
+        .inner-circle { width: 190px; height: 190px; border-radius: 50%; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .calories-text { font-size: 40px; font-weight: bold; color: var(--primary); }
+        .goal-text { font-size: 15px; color: var(--gray); margin-top: 5px; }
 
-        /* Yapay Zeka Kamera Butonu */
-        .ai-camera-btn { background: linear-gradient(45deg, #ff4081, #d500f9); border-radius: 50px; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        /* AI Kamera Butonu */
+        .ai-camera-btn { background: linear-gradient(135deg, #ff4081, #d500f9); margin-top: 30px; box-shadow: 0 4px 15px rgba(213, 0, 249, 0.3); }
 
         /* Alt Navigasyon */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface); display: flex; justify-content: space-around; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
-        .nav-item { color: var(--gray); font-size: 14px; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface); display: flex; justify-content: space-around; padding: 15px 10px 20px 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); z-index: 100; }
+        .nav-item { color: var(--gray); font-size: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
 
-        /* Geçmiş & Özel Yemek */
-        .history-item, .ingredient-item { background: var(--surface); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .add-btn { background: var(--primary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; padding: 0; }
+        /* Geçmiş & Özel Yemek Öğeleri */
+        .list-item { background: var(--surface); padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2a2a2a; }
+        
+        /* Yemek Ekleme Özel CSS */
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .add-btn-small { background: var(--primary); width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; padding: 0; flex-shrink: 0; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: stretch; }
+        .input-row input { flex: 1; }
+        .ingredient-tag { display: inline-block; background: var(--surface-light); padding: 8px 12px; border-radius: 20px; font-size: 14px; margin: 0 5px 10px 0; border: 1px solid var(--primary); }
+
+        /* Yükleniyor Ekranı */
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { border: 4px solid var(--surface); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <script>
+        // Google Gemini API Anahtarı (Tırnak işaretleri içinde kalacak)
+        const API_KEY = "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR"; 
+    </script>
+
+    <div id="loadingOverlay" class="hidden">
+        <div class="spinner"></div>
+        <p id="loadingText" style="font-weight: bold; color: white;">Yapay Zeka İnceliyor...</p>
+    </div>
+
     <div id="loginScreen" class="container">
         <h2>Profilini Oluştur</h2>
-        <p style="color: var(--gray); margin-bottom: 20px;">Günlük kalori ihtiyacını hesaplayalım.</p>
-        <div class="login-box">
+        <p style="color: var(--gray); margin-bottom: 25px; margin-top: 5px;">Günlük kalori ihtiyacını hesaplayalım.</p>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
             <input type="text" id="isim" placeholder="İsim Soyisim">
             <input type="number" id="yas" placeholder="Yaş">
             <input type="number" id="boy" placeholder="Boy (cm)">
             <input type="number" id="kilo" placeholder="Mevcut Kilo (kg)">
             <input type="number" id="hedef" placeholder="Hedef Kilo (kg)">
-            <button onclick="kayitOl()">Uygulamaya Başla</button>
+            <button onclick="kayitOl()" style="margin-top: 10px;">Uygulamaya Başla</button>
         </div>
     </div>
 
@@ -65,6 +86,7 @@
         
         <div id="homeTab" class="container tab-content">
             <h2 id="merhabaMetni">Merhaba!</h2>
+            <p style="color: var(--gray); margin-top: 5px;">Bugünkü Durumun</p>
             
             <div class="circle-wrap">
                 <div class="circle" id="progressCircle">
@@ -75,58 +97,75 @@
                 </div>
             </div>
 
-            <button class="ai-camera-btn" onclick="yapayZekaTarama()">
-                📷 Yemeği Fotoğrafla (AI)
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="fotografSecildi(event)">
+            
+            <button class="ai-camera-btn" onclick="document.getElementById('cameraInput').click()">
+                📷 Yemeği Fotoğrafla (Yapay Zeka)
             </button>
         </div>
 
         <div id="historyTab" class="container tab-content hidden">
             <h2>Tüketilen Öğünler</h2>
-            <div id="gecmisListesi" style="margin-top: 20px;">
-                </div>
+            <div id="gecmisListesi" style="margin-top: 20px;"></div>
         </div>
 
         <div id="customTab" class="container tab-content hidden">
-            <div class="header">
-                <h2>Yemek Oluştur</h2>
-            </div>
-            <input type="text" id="yemekAdi" placeholder="Örn: Yulaflı Karışım" style="margin-bottom: 15px;">
             
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="malzemeAdi" placeholder="Malzeme (örn: Süt)">
-                <input type="number" id="malzemeMiktar" placeholder="Gram/ml" style="width: 100px;">
-                <input type="number" id="malzemeKalori" placeholder="Kcal" style="width: 80px;">
-                <button class="add-btn" onclick="malzemeEkle()">+</button>
+            <div id="yemekListesiEkrani">
+                <div class="header-row">
+                    <h2>Yemeklerim</h2>
+                    <button onclick="ekranDegistir('yemekEklemeEkrani')" style="width: auto; padding: 10px 20px;">+ Yeni Ekle</button>
+                </div>
+                <div id="kayitliYemeklerListesi">
+                    <p style="color: var(--gray); text-align: center; margin-top: 30px;">Henüz özel yemek eklemedin.</p>
+                </div>
             </div>
 
-            <div id="malzemeListesi"></div>
-            
-            <button onclick="yemegiKaydet()" style="margin-top: 20px;">Bu Yemeği Tükettim Diye Ekle</button>
+            <div id="yemekEklemeEkrani" class="hidden">
+                <div class="header-row">
+                    <h2>Yeni Yemek Üret</h2>
+                    <button onclick="ekranDegistir('yemekListesiEkrani')" style="width: auto; padding: 10px 20px; background: var(--surface-light);">Geri Dön</button>
+                </div>
+                
+                <input type="text" id="yeniYemekAdi" placeholder="Yemeğin Adı (Örn: Özel Yulaf Lapası)" style="width: 100%; margin-bottom: 20px;">
+                
+                <p style="color: var(--primary); margin-bottom: 10px; font-weight: bold;">Malzemeleri Ekle</p>
+                <div class="input-row">
+                    <input type="text" id="malzemeAdi" placeholder="Malzeme (örn: Süt)">
+                    <input type="text" id="malzemeMiktar" placeholder="Gram/Kaşık/Adet" style="flex: 0.6;">
+                    <button class="add-btn-small" onclick="malzemeEkle()">+</button>
+                </div>
+
+                <div id="malzemeListesiArayuzu" style="margin-bottom: 25px; min-height: 50px;"></div>
+                
+                <button class="ai-camera-btn" onclick="yapayZekaIleHesaplaVeKaydet()" style="margin-top: 10px; background: var(--primary); box-shadow: none;">
+                    🤖 AI ile Kaloriyi Hesapla ve Kaydet
+                </button>
+            </div>
         </div>
 
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="sekmeDegistir('homeTab', this)">Ana Sayfa</div>
-            <div class="nav-item" onclick="sekmeDegistir('historyTab', this)">Geçmiş</div>
-            <div class="nav-item" onclick="sekmeDegistir('customTab', this)">Yemek Ekle</div>
+            <div class="nav-item active" onclick="sekmeDegistir('homeTab', this)"><span>🏠</span>Ana Sayfa</div>
+            <div class="nav-item" onclick="sekmeDegistir('customTab', this)"><span>🍽️</span>Yemekler</div>
+            <div class="nav-item" onclick="sekmeDegistir('historyTab', this)"><span>🕒</span>Geçmiş</div>
         </div>
     </div>
 
     <script>
-        // Veritabanı (Tarayıcı Hafızası)
         let kullanici = JSON.parse(localStorage.getItem('kullanici'));
         let tuketilenKalori = parseInt(localStorage.getItem('tuketilenKalori')) || 0;
         let gecmis = JSON.parse(localStorage.getItem('gecmis')) || [];
-        let eklenecekMalzemeler = [];
-        let toplamOzelKalori = 0;
+        let kayitliYemekler = JSON.parse(localStorage.getItem('kayitliYemekler')) || [];
+        
+        let aktifMalzemeler = [];
 
-        // Başlangıç Kontrolü
         if(kullanici) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             arayuzuGuncelle();
+            yemekleriListele();
         }
 
-        // Kayıt Olma ve Kalori Hesaplama Mantığı
         function kayitOl() {
             const isim = document.getElementById('isim').value;
             const yas = document.getElementById('yas').value;
@@ -136,22 +175,19 @@
 
             if(!isim || !yas || !boy || !kilo || !hedef) return alert("Hepsini doldur kanka!");
 
-            // Basit Kalori İhtiyacı Formülü (Mifflin-St Jeor)
-            let bazalMetabolizma = (10 * kilo) + (6.25 * boy) - (5 * yas) + 5;
-            let gunlukIhtiyac = bazalMetabolizma * 1.55; // Ortalama hareketli
-            
-            if(hedef < kilo) gunlukIhtiyac -= 400; // Kilo vermek için
-            else if(hedef > kilo) gunlukIhtiyac += 400; // Kilo almak için
+            let bazal = (10 * kilo) + (6.25 * boy) - (5 * yas) + 5;
+            let ihtiyac = bazal * 1.55;
+            if(hedef < kilo) ihtiyac -= 400; else if(hedef > kilo) ihtiyac += 400;
 
-            kullanici = { isim, yas, boy, kilo, hedef, hedefKalori: Math.round(gunlukIhtiyac) };
+            kullanici = { isim, yas, boy, kilo, hedef, hedefKalori: Math.round(ihtiyac) };
             localStorage.setItem('kullanici', JSON.stringify(kullanici));
             
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             arayuzuGuncelle();
+            yemekleriListele();
         }
 
-        // Ana Ekran ve Barı Güncelleme
         function arayuzuGuncelle() {
             document.getElementById('merhabaMetni').innerText = `Selam, ${kullanici.isim.split(' ')[0]}!`;
             document.getElementById('alinanKalori').innerText = tuketilenKalori;
@@ -159,12 +195,10 @@
 
             let yuzde = (tuketilenKalori / kullanici.hedefKalori) * 100;
             if(yuzde > 100) yuzde = 100;
-            
             document.getElementById('progressCircle').style.background = `conic-gradient(var(--primary) ${yuzde}%, var(--surface) 0%)`;
             gecmisiListele();
         }
 
-        // Sekmeler Arası Geçiş
         function sekmeDegistir(sekmeId, element) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
@@ -172,89 +206,154 @@
             element.classList.add('active');
         }
 
-        // Yapay Zeka Kamera Simülasyonu
-        function yapayZekaTarama() {
-            alert("Kamera açılıyor ve yemek taranıyor... (Simülasyon)");
-            setTimeout(() => {
-                const ornekYemekler = [
-                    { ad: "Tavuklu Pilav", kalori: 450 },
-                    { ad: "Yulaf Ezmesi & Muz", kalori: 320 },
-                    { ad: "Protein Tozu İçeceği", kalori: 120 }
-                ];
-                const tespitEdilen = ornekYemekler[Math.floor(Math.random() * ornekYemekler.length)];
-                
-                if(confirm(`Yapay Zeka '${tespitEdilen.ad}' buldu. (${tespitEdilen.kalori} kcal). Ekleyelim mi?`)) {
-                    kaloriEkle(tespitEdilen.ad, tespitEdilen.kalori);
-                }
-            }, 1500);
+        function ekranDegistir(ekranId) {
+            document.getElementById('yemekListesiEkrani').classList.add('hidden');
+            document.getElementById('yemekEklemeEkrani').classList.add('hidden');
+            document.getElementById(ekranId).classList.remove('hidden');
         }
 
-        // Özel Yemek - Malzeme Ekleme
-        function malzemeEkle() {
-            const ad = document.getElementById('malzemeAdi').value;
-            const miktar = document.getElementById('malzemeMiktar').value;
-            const kalori = parseInt(document.getElementById('malzemeKalori').value);
-
-            if(!ad || !miktar || !kalori) return;
-
-            eklenecekMalzemeler.push({ad, miktar, kalori});
-            toplamOzelKalori += kalori;
-
-            const div = document.createElement('div');
-            div.className = 'ingredient-item';
-            div.innerHTML = `<span>${ad} (${miktar})</span> <span>${kalori} kcal</span>`;
-            document.getElementById('malzemeListesi').appendChild(div);
-
-            document.getElementById('malzemeAdi').value = '';
-            document.getElementById('malzemeMiktar').value = '';
-            document.getElementById('malzemeKalori').value = '';
-        }
-
-        // Özel Yemeği Tüketilenlere Kaydetme
-        function yemegiKaydet() {
-            const yemekAdi = document.getElementById('yemekAdi').value || "Özel Karışım";
-            if(toplamOzelKalori === 0) return alert("Önce malzeme ekle!");
-            kaloriEkle(yemekAdi, toplamOzelKalori);
-            
-            // Temizle
-            eklenecekMalzemeler = [];
-            toplamOzelKalori = 0;
-            document.getElementById('malzemeListesi').innerHTML = '';
-            document.getElementById('yemekAdi').value = '';
-            sekmeDegistir('homeTab', document.querySelector('.nav-item')); // Ana sayfaya dön
-        }
-
-        // Genel Kalori ve Geçmiş Ekleme Fonksiyonu
         function kaloriEkle(isim, kalori) {
             tuketilenKalori += kalori;
             localStorage.setItem('tuketilenKalori', tuketilenKalori);
-            
             gecmis.unshift({ isim, kalori, saat: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
             localStorage.setItem('gecmis', JSON.stringify(gecmis));
-            
             arayuzuGuncelle();
+            alert(`${isim} eklendi! (+${kalori} kcal)`);
         }
 
-        // Geçmiş Sekmesini Doldurma
         function gecmisiListele() {
             const liste = document.getElementById('gecmisListesi');
             liste.innerHTML = '';
             gecmis.forEach(ogun => {
                 liste.innerHTML += `
-                    <div class="history-item">
-                        <div>
-                            <strong>${ogun.isim}</strong><br>
-                            <small style="color: var(--gray)">${ogun.saat}</small>
-                        </div>
-                        <strong style="color: var(--primary)">+${ogun.kalori} kcal</strong>
-                    </div>
-                `;
+                    <div class="list-item">
+                        <div><strong style="font-size:16px;">${ogun.isim}</strong><br><small style="color: var(--gray)">${ogun.saat}</small></div>
+                        <strong style="color: var(--primary); font-size:18px;">+${ogun.kalori} kcal</strong>
+                    </div>`;
             });
         }
 
-        // PWA Service Worker Kurulumu
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').then(() => console.log("Service Worker aktif!"));
+        /* YEMEK VE MALZEME YÖNETİMİ */
+        function yemekleriListele() {
+            const liste = document.getElementById('kayitliYemeklerListesi');
+            if(kayitliYemekler.length === 0) return;
+            liste.innerHTML = '';
+            kayitliYemekler.forEach((yemek, index) => {
+                liste.innerHTML += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="font-size:18px;">${yemek.ad}</strong>
+                            <strong style="color: var(--primary); font-size:18px;">${yemek.kalori} kcal</strong>
+                        </div>
+                        <p style="color: var(--gray); font-size: 13px;">Malzemeler: ${yemek.malzemeler.map(m => m.ad).join(', ')}</p>
+                        <button onclick="kaloriEkle('${yemek.ad}', ${yemek.kalori})" style="padding: 10px; font-size: 14px; margin-top: 5px;">Bunu Yedim Olarak Ekle</button>
+                    </div>`;
+            });
+        }
+
+        function malzemeEkle() {
+            const ad = document.getElementById('malzemeAdi').value.trim();
+            const miktar = document.getElementById('malzemeMiktar').value.trim();
+            if(!ad || !miktar) return;
+
+            aktifMalzemeler.push({ad, miktar});
+            document.getElementById('malzemeListesiArayuzu').innerHTML += `<span class="ingredient-tag">${ad} (${miktar})</span>`;
+            document.getElementById('malzemeAdi').value = '';
+            document.getElementById('malzemeMiktar').value = '';
+        }
+
+        /* YAPAY ZEKA BAĞLANTILARI (GEMINI API) */
+        function yukleniyor(goster, metin = "Hesaplanıyor...") {
+            document.getElementById('loadingText').innerText = metin;
+            if(goster) document.getElementById('loadingOverlay').classList.remove('hidden');
+            else document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        async function yapayZekaIleHesaplaVeKaydet() {
+            const yemekAdi = document.getElementById('yeniYemekAdi').value.trim();
+            if(!yemekAdi) return alert("Yemeğe bir isim ver!");
+            if(aktifMalzemeler.length === 0) return alert("Hiç malzeme eklemedin!");
+            if(API_KEY === "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR") return alert("Önce API anahtarını koda eklemelisin!");
+
+            yukleniyor(true, "AI Malzemeleri Analiz Ediyor...");
+
+            const prompt = `Ben bir diyet uygulamasında '${yemekAdi}' adlı yemeğin kalorisini hesaplamak istiyorum. İçindeki malzemeler şunlar: ${aktifMalzemeler.map(m => m.miktar + ' ' + m.ad).join(', ')}. Lütfen bu malzemelerin toplam kalorisini tahmin et. SADECE JSON FORMATINDA CEVAP VER. Başka hiçbir açıklama yazma. Format: {"kalori": toplam_sayi}`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                const data = await response.json();
+                let cevap = data.candidates[0].content.parts[0].text;
+                // AI markdown kod bloğu döndürebilir, onu temizleyelim
+                cevap = cevap.replace(/```json/g, '').replace(/```/g, '').trim(); 
+                
+                const sonuc = JSON.parse(cevap);
+                
+                kayitliYemekler.unshift({ ad: yemekAdi, malzemeler: aktifMalzemeler, kalori: sonuc.kalori });
+                localStorage.setItem('kayitliYemekler', JSON.stringify(kayitliYemekler));
+                
+                aktifMalzemeler = [];
+                document.getElementById('yeniYemekAdi').value = '';
+                document.getElementById('malzemeListesiArayuzu').innerHTML = '';
+                
+                yemekleriListele();
+                ekranDegistir('yemekListesiEkrani');
+                alert(`Yapay Zeka bu yemeği ${sonuc.kalori} kcal olarak hesapladı ve listene kaydetti!`);
+
+            } catch (error) {
+                console.error(error);
+                alert("Hesaplama sırasında bir hata oluştu. API anahtarını kontrol et.");
+            } finally {
+                yukleniyor(false);
+            }
+        }
+
+        function fotografSecildi(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            if(API_KEY === "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR") return alert("Yapay zekayı kullanmak için kodu düzenleyip API anahtarını girmelisin!");
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                yukleniyor(true, "AI Fotoğrafı İnceliyor...");
+
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: "Bu fotoğraftaki yemeğin/içeceğin ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalorisini hesapla. SADECE JSON formatında cevap ver. Başka hiçbir kelime kullanma. Örnek Format: {\"ad\": \"Tavuklu Pilav\", \"kalori\": 450}" },
+                                    { inlineData: { mimeType: file.type, data: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    let cevap = data.candidates[0].content.parts[0].text;
+                    cevap = cevap.replace(/```json/g, '').replace(/```/g, '').trim(); 
+                    
+                    const sonuc = JSON.parse(cevap);
+                    
+                    if(confirm(`AI Tahmini: ${sonuc.ad} (${sonuc.kalori} kcal). Tüketilenlere eklensin mi?`)) {
+                        kaloriEkle(sonuc.ad, sonuc.kalori);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Fotoğraf analiz edilemedi. Lütfen tekrar dene.");
+                } finally {
+                    yukleniyor(false);
+                    document.getElementById('cameraInput').value = ""; // Inputu sıfırla
+                }
+            };
+            reader.readAsDataURL(file);
         }
     </script>
 </body>
