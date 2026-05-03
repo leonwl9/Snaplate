@@ -1,6 +1,6 @@
 {
-  "name": "Kalori Takip App",
-  "short_name": "KaloriApp",
+  "name": "Kalori Takip Pro",
+  "short_name": "KaloriPro",
   "description": "Yapay zeka destekli kişisel kalori takip ve hesaplama uygulaması.",
   "start_url": "./index.html",
   "display": "standalone",
@@ -10,7 +10,8 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2936/2936886.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
