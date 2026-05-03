@@ -11,8 +11,9 @@
             --bg: #121212;
             --surface: #1e1e1e;
             --surface-light: #2c2c2c;
-            --text: #888888;
+            --text: #ffffff;
             --gray: #888888;
+            --danger: #e53935;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg); color: var(--text); overflow-x: hidden; }
@@ -33,8 +34,9 @@
 
         .ai-camera-btn { background: linear-gradient(135deg, #ff4081, #d500f9); margin-top: 30px; box-shadow: 0 4px 15px rgba(213, 0, 249, 0.3); }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface); display: flex; justify-content: space-around; padding: 15px 10px 20px 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); z-index: 100; }
-        .nav-item { color: var(--gray); font-size: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface); display: flex; justify-content: space-around; padding: 10px 5px 15px 5px; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); z-index: 100; }
+        .nav-item { color: var(--gray); font-size: 13px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; text-align: center; }
+        .nav-item span { font-size: 20px; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
 
         .list-item { background: var(--surface); padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2a2a2a; }
@@ -44,6 +46,10 @@
         .input-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: stretch; }
         .input-row input { flex: 1; }
         .ingredient-tag { display: inline-block; background: var(--surface-light); padding: 8px 12px; border-radius: 20px; font-size: 14px; margin: 0 5px 10px 0; border: 1px solid var(--primary); }
+
+        /* Ayarlar Özel CSS */
+        .settings-group { margin-bottom: 15px; }
+        .settings-label { display: block; margin-bottom: 6px; color: var(--primary); font-size: 14px; font-weight: bold; }
 
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { border: 4px solid var(--surface); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -62,7 +68,7 @@
         <p style="color: var(--gray); margin-bottom: 25px; margin-top: 5px;">Günlük kalori ihtiyacını hesaplayalım.</p>
         <div style="display: flex; flex-direction: column; gap: 15px;">
             <input type="text" id="isim" placeholder="İsim Soyisim">
-            <input type="number" id="yas" placeholder="gay">
+            <input type="number" id="yas" placeholder="Yaş">
             <input type="number" id="boy" placeholder="Boy (cm)">
             <input type="number" id="kilo" placeholder="Mevcut Kilo (kg)">
             <input type="number" id="hedef" placeholder="Hedef Kilo (kg)">
@@ -125,7 +131,7 @@
                 <p style="color: var(--primary); margin-bottom: 10px; font-weight: bold;">Malzemeleri Ekle</p>
                 <div class="input-row">
                     <input type="text" id="malzemeAdi" placeholder="Malzeme (örn: Süt)">
-                    <input type="text" id="malzemeMiktar" placeholder="Gram/Kaşık/Adet" style="flex: 0.6;">
+                    <input type="text" id="malzemeMiktar" placeholder="Gram/Kaşık" style="flex: 0.6;">
                     <button class="add-btn-small" onclick="malzemeEkle()">+</button>
                 </div>
 
@@ -137,15 +143,55 @@
             </div>
         </div>
 
+        <div id="settingsTab" class="container tab-content hidden">
+            <h2>Ayarlar</h2>
+            <p style="color: var(--gray); margin-bottom: 25px; margin-top: 5px;">Profilini ve uygulamanı yönet.</p>
+            
+            <div class="settings-group">
+                <label class="settings-label">İsim Soyisim</label>
+                <input type="text" id="ayarIsim">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="settings-group" style="flex: 1;">
+                    <label class="settings-label">Yaş</label>
+                    <input type="number" id="ayarYas">
+                </div>
+                <div class="settings-group" style="flex: 1;">
+                    <label class="settings-label">Boy (cm)</label>
+                    <input type="number" id="ayarBoy">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="settings-group" style="flex: 1;">
+                    <label class="settings-label">Kilo (kg)</label>
+                    <input type="number" id="ayarKilo">
+                </div>
+                <div class="settings-group" style="flex: 1;">
+                    <label class="settings-label">Hedef (kg)</label>
+                    <input type="number" id="ayarHedef">
+                </div>
+            </div>
+            
+            <hr style="border-color: #333; margin: 15px 0;">
+            
+            <div class="settings-group">
+                <label class="settings-label">Google Gemini API Anahtarı</label>
+                <input type="password" id="ayarApiKey">
+            </div>
+            
+            <button onclick="ayarlariKaydet()" style="margin-top: 10px;">Değişiklikleri Kaydet</button>
+            <button onclick="uygulamayiSifirla()" style="margin-top: 20px; background: var(--danger);">Tüm Verileri Sıfırla (Çıkış Yap)</button>
+        </div>
+
         <div class="bottom-nav">
             <div class="nav-item active" onclick="sekmeDegistir('homeTab', this)"><span>🏠</span>Ana Sayfa</div>
             <div class="nav-item" onclick="sekmeDegistir('customTab', this)"><span>🍽️</span>Yemekler</div>
             <div class="nav-item" onclick="sekmeDegistir('historyTab', this)"><span>🕒</span>Geçmiş</div>
+            <div class="nav-item" onclick="sekmeDegistir('settingsTab', this)"><span>⚙️</span>Ayarlar</div>
         </div>
     </div>
 
     <script>
-        // ESKİ BOZUK VERİLERİ YAKALAYAN ZIRH SİSTEMİ
         let kullanici = null;
         let tuketilenKalori = 0;
         let gecmis = [];
@@ -161,18 +207,26 @@
             kayitliYemekler = JSON.parse(localStorage.getItem('kayitliYemekler')) || [];
         } catch (e) {
             console.error("Tarayıcı hafızasında bozuk veri bulundu, temizleniyor...", e);
-            localStorage.clear(); // Hata varsa her şeyi sıfırla ki uygulama kilitlenmesin
+            localStorage.clear(); 
         }
 
-        // BAŞLANGIÇ KONTROLÜ
         if(kullanici && kullanici.apiKey) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             arayuzuGuncelle();
             yemekleriListele();
+            ayarlarGirdileriniDoldur();
         }
 
-        // KAYIT SİSTEMİ
+        // --- KAYIT VE AYARLAR ---
+        function kaloriIhtiyaciHesapla(k, b, y, h) {
+            let bazal = (10 * k) + (6.25 * b) - (5 * y) + 5;
+            let ihtiyac = bazal * 1.55;
+            if(h < k) ihtiyac -= 400; 
+            else if(h > k) ihtiyac += 400;
+            return Math.round(ihtiyac);
+        }
+
         function kayitOl() {
             try {
                 const isim = document.getElementById('isim').value.trim();
@@ -186,31 +240,64 @@
                     return alert("Kanka lütfen tüm bilgileri ve API Anahtarını doldur!");
                 }
 
-                // Sayıları garantiye alıyoruz
                 let k = parseFloat(kilo);
                 let b = parseFloat(boy);
                 let y = parseFloat(yas);
                 let h = parseFloat(hedef);
 
-                let bazal = (10 * k) + (6.25 * b) - (5 * y) + 5;
-                let ihtiyac = bazal * 1.55;
-                
-                // Hedef kiloya göre kalori ayarı (-400 veya +400)
-                if(h < k) ihtiyac -= 400; 
-                else if(h > k) ihtiyac += 400;
+                let ihtiyac = kaloriIhtiyaciHesapla(k, b, y, h);
 
-                kullanici = { isim, yas: y, boy: b, kilo: k, hedef: h, hedefKalori: Math.round(ihtiyac), apiKey };
+                kullanici = { isim, yas: y, boy: b, kilo: k, hedef: h, hedefKalori: ihtiyac, apiKey };
                 localStorage.setItem('kullanici', JSON.stringify(kullanici));
                 
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.remove('hidden');
                 arayuzuGuncelle();
                 yemekleriListele();
+                ayarlarGirdileriniDoldur();
             } catch (err) {
                 alert("Kayıt olurken bir hata oluştu: " + err.message);
             }
         }
 
+        function ayarlarGirdileriniDoldur() {
+            if(!kullanici) return;
+            document.getElementById('ayarIsim').value = kullanici.isim;
+            document.getElementById('ayarYas').value = kullanici.yas;
+            document.getElementById('ayarBoy').value = kullanici.boy;
+            document.getElementById('ayarKilo').value = kullanici.kilo;
+            document.getElementById('ayarHedef').value = kullanici.hedef;
+            document.getElementById('ayarApiKey').value = kullanici.apiKey;
+        }
+
+        function ayarlariKaydet() {
+            const isim = document.getElementById('ayarIsim').value.trim();
+            const yas = parseFloat(document.getElementById('ayarYas').value);
+            const boy = parseFloat(document.getElementById('ayarBoy').value);
+            const kilo = parseFloat(document.getElementById('ayarKilo').value);
+            const hedef = parseFloat(document.getElementById('ayarHedef').value);
+            const apiKey = document.getElementById('ayarApiKey').value.trim();
+
+            if(!isim || !yas || !boy || !kilo || !hedef || !apiKey) {
+                return alert("Lütfen tüm alanları doldur!");
+            }
+
+            let ihtiyac = kaloriIhtiyaciHesapla(kilo, boy, yas, hedef);
+            kullanici = { isim, yas, boy, kilo, hedef, hedefKalori: ihtiyac, apiKey };
+            localStorage.setItem('kullanici', JSON.stringify(kullanici));
+            
+            arayuzuGuncelle();
+            alert("Ayarların başarıyla güncellendi! Yeni hedefin: " + ihtiyac + " kcal.");
+        }
+
+        function uygulamayiSifirla() {
+            if(confirm("Tüm bilgilerin, kayıtlı yemeklerin ve geçmişin tamamen silinecek. Emin misin?")) {
+                localStorage.clear();
+                location.reload(); // Sayfayı yenileyip giriş ekranına döndürür
+            }
+        }
+
+        // --- ARAYÜZ VE GEÇİŞLER ---
         function arayuzuGuncelle() {
             document.getElementById('merhabaMetni').innerText = `Selam, ${kullanici.isim.split(' ')[0]}!`;
             document.getElementById('alinanKalori').innerText = tuketilenKalori;
@@ -235,6 +322,7 @@
             document.getElementById(ekranId).classList.remove('hidden');
         }
 
+        // --- KALORİ VE YEMEK İŞLEMLERİ ---
         function kaloriEkle(isim, kalori) {
             tuketilenKalori += kalori;
             localStorage.setItem('tuketilenKalori', tuketilenKalori);
@@ -284,6 +372,7 @@
             document.getElementById('malzemeMiktar').value = '';
         }
 
+        // --- YAPAY ZEKA ---
         function yukleniyor(goster, metin = "Hesaplanıyor...") {
             document.getElementById('loadingText').innerText = metin;
             if(goster) document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -328,7 +417,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Hesaplama sırasında bir hata oluştu. Girdiğiniz API anahtarının doğru olduğundan emin olun.");
+                alert("Hesaplama sırasında bir hata oluştu. Ayarlar sekmesinden API anahtarını kontrol et.");
             } finally {
                 yukleniyor(false);
             }
@@ -371,7 +460,7 @@
                     }
                 } catch (error) {
                     console.error(error);
-                    alert("Fotoğraf analiz edilemedi. API anahtarınızın doğruluğunu ve internet bağlantınızı kontrol edin.");
+                    alert("Fotoğraf analiz edilemedi. Ayarlar sekmesinden API anahtarınızı kontrol edin.");
                 } finally {
                     yukleniyor(false);
                     document.getElementById('cameraInput').value = ""; 
@@ -380,7 +469,6 @@
             reader.readAsDataURL(file);
         }
 
-        // PWA SERVICE WORKER BAĞLANTISI (Bunu silmiştik, geri ekledim)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(() => console.log("Service Worker aktif!"))
