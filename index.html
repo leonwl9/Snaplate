@@ -59,11 +59,6 @@
 </head>
 <body>
 
-    <script>
-        // Google Gemini API Anahtarı (Tırnak işaretleri içinde kalacak)
-        const API_KEY = "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR"; 
-    </script>
-
     <div id="loadingOverlay" class="hidden">
         <div class="spinner"></div>
         <p id="loadingText" style="font-weight: bold; color: white;">Yapay Zeka İnceliyor...</p>
@@ -78,6 +73,12 @@
             <input type="number" id="boy" placeholder="Boy (cm)">
             <input type="number" id="kilo" placeholder="Mevcut Kilo (kg)">
             <input type="number" id="hedef" placeholder="Hedef Kilo (kg)">
+            
+            <hr style="border-color: #333; margin: 5px 0;">
+            <p style="color: var(--primary); font-size: 14px; font-weight: bold;">Yapay Zeka Bağlantısı</p>
+            <input type="password" id="apiKey" placeholder="Google Gemini API Anahtarı">
+            <p style="color: var(--gray); font-size: 12px; margin-top: -10px;">Yemek tanıma özelliği için Google AI Studio'dan aldığınız API anahtarını girin.</p>
+            
             <button onclick="kayitOl()" style="margin-top: 10px;">Uygulamaya Başla</button>
         </div>
     </div>
@@ -172,14 +173,18 @@
             const boy = document.getElementById('boy').value;
             const kilo = document.getElementById('kilo').value;
             const hedef = document.getElementById('hedef').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
 
-            if(!isim || !yas || !boy || !kilo || !hedef) return alert("Hepsini doldur kanka!");
+            if(!isim || !yas || !boy || !kilo || !hedef || !apiKey) {
+                return alert("Tüm bilgileri ve API Anahtarını doldurmalısın!");
+            }
 
             let bazal = (10 * kilo) + (6.25 * boy) - (5 * yas) + 5;
             let ihtiyac = bazal * 1.55;
             if(hedef < kilo) ihtiyac -= 400; else if(hedef > kilo) ihtiyac += 400;
 
-            kullanici = { isim, yas, boy, kilo, hedef, hedefKalori: Math.round(ihtiyac) };
+            // API anahtarını kullanıcı objesine ekledik
+            kullanici = { isim, yas, boy, kilo, hedef, hedefKalori: Math.round(ihtiyac), apiKey };
             localStorage.setItem('kullanici', JSON.stringify(kullanici));
             
             document.getElementById('loginScreen').classList.add('hidden');
@@ -233,7 +238,6 @@
             });
         }
 
-        /* YEMEK VE MALZEME YÖNETİMİ */
         function yemekleriListele() {
             const liste = document.getElementById('kayitliYemeklerListesi');
             if(kayitliYemekler.length === 0) return;
@@ -245,116 +249,4 @@
                             <strong style="font-size:18px;">${yemek.ad}</strong>
                             <strong style="color: var(--primary); font-size:18px;">${yemek.kalori} kcal</strong>
                         </div>
-                        <p style="color: var(--gray); font-size: 13px;">Malzemeler: ${yemek.malzemeler.map(m => m.ad).join(', ')}</p>
-                        <button onclick="kaloriEkle('${yemek.ad}', ${yemek.kalori})" style="padding: 10px; font-size: 14px; margin-top: 5px;">Bunu Yedim Olarak Ekle</button>
-                    </div>`;
-            });
-        }
-
-        function malzemeEkle() {
-            const ad = document.getElementById('malzemeAdi').value.trim();
-            const miktar = document.getElementById('malzemeMiktar').value.trim();
-            if(!ad || !miktar) return;
-
-            aktifMalzemeler.push({ad, miktar});
-            document.getElementById('malzemeListesiArayuzu').innerHTML += `<span class="ingredient-tag">${ad} (${miktar})</span>`;
-            document.getElementById('malzemeAdi').value = '';
-            document.getElementById('malzemeMiktar').value = '';
-        }
-
-        /* YAPAY ZEKA BAĞLANTILARI (GEMINI API) */
-        function yukleniyor(goster, metin = "Hesaplanıyor...") {
-            document.getElementById('loadingText').innerText = metin;
-            if(goster) document.getElementById('loadingOverlay').classList.remove('hidden');
-            else document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        async function yapayZekaIleHesaplaVeKaydet() {
-            const yemekAdi = document.getElementById('yeniYemekAdi').value.trim();
-            if(!yemekAdi) return alert("Yemeğe bir isim ver!");
-            if(aktifMalzemeler.length === 0) return alert("Hiç malzeme eklemedin!");
-            if(API_KEY === "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR") return alert("Önce API anahtarını koda eklemelisin!");
-
-            yukleniyor(true, "AI Malzemeleri Analiz Ediyor...");
-
-            const prompt = `Ben bir diyet uygulamasında '${yemekAdi}' adlı yemeğin kalorisini hesaplamak istiyorum. İçindeki malzemeler şunlar: ${aktifMalzemeler.map(m => m.miktar + ' ' + m.ad).join(', ')}. Lütfen bu malzemelerin toplam kalorisini tahmin et. SADECE JSON FORMATINDA CEVAP VER. Başka hiçbir açıklama yazma. Format: {"kalori": toplam_sayi}`;
-
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-
-                const data = await response.json();
-                let cevap = data.candidates[0].content.parts[0].text;
-                // AI markdown kod bloğu döndürebilir, onu temizleyelim
-                cevap = cevap.replace(/```json/g, '').replace(/```/g, '').trim(); 
-                
-                const sonuc = JSON.parse(cevap);
-                
-                kayitliYemekler.unshift({ ad: yemekAdi, malzemeler: aktifMalzemeler, kalori: sonuc.kalori });
-                localStorage.setItem('kayitliYemekler', JSON.stringify(kayitliYemekler));
-                
-                aktifMalzemeler = [];
-                document.getElementById('yeniYemekAdi').value = '';
-                document.getElementById('malzemeListesiArayuzu').innerHTML = '';
-                
-                yemekleriListele();
-                ekranDegistir('yemekListesiEkrani');
-                alert(`Yapay Zeka bu yemeği ${sonuc.kalori} kcal olarak hesapladı ve listene kaydetti!`);
-
-            } catch (error) {
-                console.error(error);
-                alert("Hesaplama sırasında bir hata oluştu. API anahtarını kontrol et.");
-            } finally {
-                yukleniyor(false);
-            }
-        }
-
-        function fotografSecildi(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            if(API_KEY === "BURAYA_ALDIĞIN_API_ANAHTARINI_YAPIŞTIR") return alert("Yapay zekayı kullanmak için kodu düzenleyip API anahtarını girmelisin!");
-
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const base64Data = reader.result.split(',')[1];
-                yukleniyor(true, "AI Fotoğrafı İnceliyor...");
-
-                try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: "Bu fotoğraftaki yemeğin/içeceğin ne olduğunu tahmin et ve porsiyon boyutuna göre tahmini kalorisini hesapla. SADECE JSON formatında cevap ver. Başka hiçbir kelime kullanma. Örnek Format: {\"ad\": \"Tavuklu Pilav\", \"kalori\": 450}" },
-                                    { inlineData: { mimeType: file.type, data: base64Data } }
-                                ]
-                            }]
-                        })
-                    });
-
-                    const data = await response.json();
-                    let cevap = data.candidates[0].content.parts[0].text;
-                    cevap = cevap.replace(/```json/g, '').replace(/```/g, '').trim(); 
-                    
-                    const sonuc = JSON.parse(cevap);
-                    
-                    if(confirm(`AI Tahmini: ${sonuc.ad} (${sonuc.kalori} kcal). Tüketilenlere eklensin mi?`)) {
-                        kaloriEkle(sonuc.ad, sonuc.kalori);
-                    }
-                } catch (error) {
-                    console.error(error);
-                    alert("Fotoğraf analiz edilemedi. Lütfen tekrar dene.");
-                } finally {
-                    yukleniyor(false);
-                    document.getElementById('cameraInput').value = ""; // Inputu sıfırla
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    </script>
-</body>
-</html>
+                        <p style="color: var(--gray); font-size: 13px;">Malzemeler: ${yemek.malzemeler.map(m => m.ad).join(', '
